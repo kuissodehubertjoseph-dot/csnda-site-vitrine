@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <path id="circleTextTop" d="M 60,200 A 140,140 0 1 1 340,200" />
+    <path id="circleTextBottom" d="M 340,205 A 140,140 0 1 1 60,205" />
+  </defs>
+
+  <circle cx="200" cy="200" r="185" fill="#FFFFFF" stroke="#5EB3E4" stroke-width="6"/>
+  <circle cx="200" cy="200" r="150" fill="#FFFFFF" stroke="#4CAF6D" stroke-width="3"/>
+
+  <path d="M60,200 A140,140 0 0,1 130,90" fill="none" stroke="#4CAF6D" stroke-width="10" stroke-linecap="round"/>
+  <path d="M340,200 A140,140 0 0,0 270,90" fill="none" stroke="#4CAF6D" stroke-width="10" stroke-linecap="round"/>
+  <path d="M65,240 A140,140 0 0,0 120,320" fill="none" stroke="#4CAF6D" stroke-width="10" stroke-linecap="round"/>
+  <path d="M335,240 A140,140 0 0,1 280,320" fill="none" stroke="#4CAF6D" stroke-width="10" stroke-linecap="round"/>
+
+  <text font-family="Georgia, serif" font-size="15" font-weight="bold" fill="#1A1A1A" letter-spacing="1.5">
+    <textPath href="#circleTextTop" startOffset="50%" text-anchor="middle">
+      COURS SECONDAIRE NOTRE-DAME DES APÔTRES
+    </textPath>
+  </text>
+
+  <text x="200" y="55" font-family="Georgia, serif" font-size="34" font-weight="bold" fill="#5EB3E4" text-anchor="middle" letter-spacing="2">CSNDA</text>
+
+  <rect x="110" y="115" width="180" height="26" rx="13" fill="#5EB3E4"/>
+  <text x="200" y="133" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">DIGNITÉ FÉMININE</text>
+
+  <g transform="translate(200,225)">
+    <path d="M-4,-70 Q-30,-60 -30,-30 Q-30,10 -20,40 Q0,55 20,40 Q30,10 30,-30 Q30,-60 4,-70 Z" fill="#F2A6B0" opacity="0.35"/>
+    <circle cx="0" cy="-78" r="16" fill="#F2A6B0" opacity="0.6"/>
+    <path d="M0,-62 C-22,-55 -34,-30 -30,-5 C-27,15 -18,35 0,48 C18,35 27,15 30,-5 C34,-30 22,-55 0,-62 Z" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/>
+    <circle cx="0" cy="-78" r="15" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/>
+    <path d="M-13,-8 L13,-8 L13,4 L-13,4 Z" fill="none" stroke="#1A1A1A" stroke-width="2"/>
+    <line x1="-13" y1="-2" x2="13" y2="-2" stroke="#1A1A1A" stroke-width="2"/>
+  </g>
+
+  <rect x="60" y="245" width="90" height="22" rx="11" fill="#F2A6B0" transform="rotate(-8 105 256)"/>
+  <text x="105" y="261" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1A1A1A" text-anchor="middle" transform="rotate(-8 105 256)">PRIÈRE</text>
+
+  <rect x="155" y="258" width="90" height="22" rx="11" fill="#5EB3E4"/>
+  <text x="200" y="274" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">DISCIPLINE</text>
+
+  <rect x="250" y="245" width="90" height="22" rx="11" fill="#F2A6B0" transform="rotate(8 295 256)"/>
+  <text x="295" y="261" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#1A1A1A" text-anchor="middle" transform="rotate(8 295 256)">TRAVAIL</text>
+
+  <g transform="translate(200,300)">
+    <path d="M-45,-8 L0,-16 L45,-8 L45,8 L0,0 L-45,8 Z" fill="none" stroke="#4CAF6D" stroke-width="2.5"/>
+    <line x1="0" y1="-16" x2="0" y2="0" stroke="#4CAF6D" stroke-width="2"/>
+  </g>
+
+  <path d="M90,325 L200,340 L310,325 L310,345 L200,362 L90,345 Z" fill="#F2A6B0"/>
+  <text x="200" y="342" font-family="Georgia, serif" font-style="italic" font-size="12" fill="#1A1A1A" text-anchor="middle">Optimus esse aut non esse</text>
+
+  <g transform="translate(200,352)" stroke="#4CAF6D" stroke-width="5" stroke-linecap="round">
+    <line x1="-30" y1="-8" x2="30" y2="8"/>
+    <line x1="30" y1="-8" x2="-30" y2="8"/>
+  </g>
+</svg>
