@@ -15,10 +15,10 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@notredameapotres.bj'],
+            ['email' => 'kuissodehubertjoseph@gmail.com'],
             [
                 'name' => 'Administration NDA',
-                'password' => 'Nda2026-94d46f!',
+                'password' => 'Dipita03@',
             ]
         );
     }

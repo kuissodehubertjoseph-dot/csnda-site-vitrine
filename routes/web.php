@@ -3,6 +3,7 @@
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentImportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -13,6 +14,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         return redirect()->route('eleves.index');
     })->name('dashboard');
+
+    Route::get('/eleves/import', [StudentImportController::class, 'create'])->name('eleves.import.form');
+    Route::post('/eleves/import/apercu', [StudentImportController::class, 'apercu'])->name('eleves.import.apercu');
+    Route::post('/eleves/import', [StudentImportController::class, 'store'])->name('eleves.import.store');
 
     Route::resource('eleves', StudentController::class)->parameters(['eleves' => 'student']);
     Route::patch('/eleves/{student}/statut', [StudentController::class, 'toggleStatut'])->name('eleves.statut');

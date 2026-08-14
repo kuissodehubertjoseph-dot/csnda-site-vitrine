@@ -8,6 +8,9 @@
                 <a href="{{ route('cartes.lot.form') }}" class="inline-flex items-center px-4 py-2 bg-white border border-brand-green rounded-md text-sm font-medium text-brand-green-deep hover:bg-brand-green/10">
                     Impression par lot
                 </a>
+                <a href="{{ route('eleves.import.form') }}" class="inline-flex items-center px-4 py-2 bg-white border border-brand-sky rounded-md text-sm font-medium text-brand-sky-deep hover:bg-brand-sky/10">
+                    Importer un PDF
+                </a>
                 <a href="{{ route('eleves.create') }}" class="inline-flex items-center px-4 py-2 bg-brand-sky border border-transparent rounded-md text-sm font-medium text-white hover:bg-brand-sky-deep">
                     + Nouvel élève
                 </a>

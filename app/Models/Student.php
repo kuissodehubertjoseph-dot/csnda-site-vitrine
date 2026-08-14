@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Student extends Model
 {
@@ -64,7 +65,7 @@ class Student extends Model
      */
     public function getPhotoDataUriAttribute(): string
     {
-        $chemin = $this->photo ? storage_path('app/public/'.$this->photo) : null;
+        $chemin = $this->photo ? Storage::disk('public')->path($this->photo) : null;
 
         if (! $chemin || ! is_file($chemin)) {
             $chemin = public_path('images/photo-placeholder.png');
