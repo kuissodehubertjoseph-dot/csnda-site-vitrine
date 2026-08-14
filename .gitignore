@@ -3,6 +3,7 @@
 .env
 .env.backup
 .env.production
+.ftp-credentials
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -22,5 +23,3 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
-
-.ftp-credentials

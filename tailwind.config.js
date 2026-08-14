@@ -15,11 +15,14 @@ export default {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                // Palette officielle CSNDA - ne pas ajouter d'autres couleurs
-                ciel: '#5EB3E4',
-                laurier: '#4CAF6D',
-                saumon: '#F2A6B0',
-                encre: '#1A1A1A',
+                // Palette officielle CSNDA — voir config/ecole.php pour l'usage sur les cartes.
+                'brand-sky': '#5EB3E4',
+                'brand-sky-deep': '#3E93C4',
+                'brand-green': '#4CAF6D',
+                'brand-green-deep': '#379258',
+                'brand-salmon': '#F2A6B0',
+                'brand-salmon-deep': '#E58B97',
+                'brand-ink': '#1A1A1A',
             },
         },
     },

@@ -3,20 +3,22 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class AdminUserSeeder extends Seeder
 {
+    /**
+     * Crée le compte administrateur (directeur/secrétaire) par défaut.
+     * Identifiants par défaut — à changer après la première connexion.
+     */
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@csnda-cotonou.bj'],
+            ['email' => 'admin@notredameapotres.bj'],
             [
-                'name' => 'Administration CSNDA',
-                'password' => Hash::make('csnda2026'),
-                'role' => 'administrateur',
-                'email_verified_at' => now(),
+                'name' => 'Administration NDA',
+                'password' => 'Nda2026-94d46f!',
             ]
         );
     }

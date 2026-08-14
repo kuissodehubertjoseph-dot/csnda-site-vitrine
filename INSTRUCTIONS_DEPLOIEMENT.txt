@@ -1,0 +1,88 @@
+DÉPLOIEMENT SUR INFINITYFREE VIA FILEZILLA (FTP classique)
+====================================================================
+
+L'approche ZIP (upload + extraction, script FTP automatisé ou
+Gestionnaire de fichiers web) a été abandonnée : les deux ont échoué à
+recréer correctement les sous-dossiers (notamment vendor/, ~9300
+fichiers). On transfère maintenant les fichiers en clair, en glisser-
+déposer, avec un client FTP classique (FileZilla).
+
+Dossier prêt sur le disque local :
+    C:\Users\ADMIN\Desktop\cotex benin tv\deploiement\
+
+Structure de ce dossier (déjà organisée exactement comme elle doit
+apparaître sur le serveur) :
+    deploiement/
+        htdocs/
+            index.php          <- point d'entrée public
+            .htaccess          <- réécriture d'URL Laravel
+            build/             <- CSS/JS compilés (npm run build)
+            images/
+            storage/           <- fichiers déjà uploadés (photos élèves, etc.)
+            favicon.ico
+            robots.txt
+            laravel_app/       <- reste du projet Laravel (protégé)
+                .htaccess      <- bloque l'accès web direct à ce dossier
+                .env           <- config production (DB_PASSWORD à compléter)
+                app/
+                bootstrap/
+                config/
+                database/
+                resources/
+                routes/
+                storage/
+                vendor/
+                artisan
+                composer.json
+                composer.lock
+
+ÉTAPE 0 — Avant tout : compléter le .env
+------------------------------------------
+Ouvrir deploiement\htdocs\laravel_app\.env avec un éditeur de texte et
+remplacer :
+  - APP_URL=https://VOTRE-DOMAINE-A-COMPLETER   -> votre vraie URL
+  - DB_PASSWORD=                                -> votre mot de passe MySQL InfinityFree
+
+APP_ENV=production, APP_DEBUG=false et les identifiants MySQL (DB_HOST,
+DB_DATABASE, DB_USERNAME) sont déjà renseignés. Ne collez jamais le mot
+de passe dans une conversation ou un fichier suivi par git.
+
+ÉTAPE 1 — Connexion FileZilla
+------------------------------------------
+1. Ouvrir FileZilla.
+2. Se connecter au serveur InfinityFree avec vos identifiants FTP
+   (Hôte : ftpupload.net, Port : 21, identifiant if0_42554497).
+3. Dans le panneau de droite (serveur distant), naviguer jusqu'au
+   dossier htdocs/.
+
+ÉTAPE 2 — Transfert
+------------------------------------------
+1. Dans le panneau de gauche (local), ouvrir :
+   C:\Users\ADMIN\Desktop\cotex benin tv\deploiement\htdocs\
+2. Sélectionner TOUT le contenu de ce dossier (index.php, .htaccess,
+   build/, images/, storage/, favicon.ico, robots.txt, laravel_app/ —
+   attention à activer l'affichage des fichiers cachés dans FileZilla,
+   sinon .htaccess ne sera pas visible/transféré).
+3. Glisser-déposer vers htdocs/ sur le serveur (panneau de droite).
+4. Laisser FileZilla transférer tous les fichiers et sous-dossiers,
+   y compris vendor/ (~9300 fichiers) — cela peut prendre du temps mais
+   FTP classique ne souffre pas des limites d'extraction en ligne.
+
+ÉTAPE 3 — Vérifications
+------------------------------------------
+- Vérifier dans FileZilla (panneau droit) que htdocs/laravel_app/vendor/
+  contient bien les ~9300 fichiers (comparer avec le panneau de gauche —
+  FileZilla affiche le nombre de fichiers en bas si vous comparez les
+  répertoires).
+- Confirmer que htdocs/.htaccess et htdocs/laravel_app/.htaccess sont
+  bien transférés (fichiers cachés).
+- Vérifier que https://votre-domaine/laravel_app/ renvoie une erreur 403
+  (protection active).
+- Vérifier que storage/ et bootstrap/cache/ dans htdocs/laravel_app/ sont
+  accessibles en écriture côté serveur (généralement le cas par défaut
+  chez InfinityFree).
+- Importer la base de données via phpMyAdmin si ce n'est pas déjà fait
+  (pas d'accès SSH/artisan pour lancer les migrations automatiquement).
+- Visiter https://votre-domaine/ et vérifier que le site se charge, que
+  les CSS/JS (build/) s'affichent, et qu'une page utilisant une image
+  uploadée (storage/) fonctionne.

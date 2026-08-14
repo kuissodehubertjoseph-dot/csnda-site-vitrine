@@ -1,0 +1,9 @@
+# Bloque tout accès web direct à ce dossier (htdocs/laravel_app/).
+# Seul index.php (dans htdocs/) doit charger ces fichiers via require, jamais le navigateur.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order Deny,Allow
+    Deny from all
+</IfModule>
