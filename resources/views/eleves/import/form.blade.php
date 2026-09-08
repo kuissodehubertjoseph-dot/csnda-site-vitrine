@@ -16,10 +16,11 @@
 
             <div class="bg-white shadow-sm rounded-lg p-6">
                 <p class="text-sm text-gray-600 mb-6">
-                    Déposez le fichier PDF de la liste de classe fourni par l'école (noms, prénoms et matricules).
-                    Vous pourrez vérifier et corriger les données extraites avant leur enregistrement définitif.
-                    Les photos et les autres informations (date de naissance, sexe...) restent à compléter ensuite
-                    sur la fiche de chaque élève.
+                    Déposez le fichier PDF de la liste de classe fourni par l'école. Le matricule, le nom, les
+                    prénoms, le sexe, la date et le lieu de naissance sont extraits automatiquement — la classe et
+                    l'année scolaire sont lues directement dans l'en-tête du PDF ("Classe : ...", "Année scolaire : ...").
+                    Vous pourrez vérifier et corriger chaque champ avant l'enregistrement définitif. Seule la photo
+                    reste à ajouter ensuite sur la fiche de chaque élève.
                 </p>
 
                 <form method="POST" action="{{ route('eleves.import.apercu') }}" enctype="multipart/form-data" class="space-y-4">
@@ -33,20 +34,24 @@
                     </div>
 
                     <div>
-                        <x-input-label for="classe" value="Classe concernée" />
-                        <select id="classe" name="classe" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-sky focus:ring-brand-sky" required>
-                            <option value="">-- Sélectionner --</option>
+                        <x-input-label for="classe" value="Classe concernée (facultatif)" />
+                        <input id="classe" name="classe" type="text" list="classes-suggestions"
+                            placeholder="Détectée automatiquement dans le PDF si laissé vide"
+                            value="{{ old('classe') }}"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-sky focus:ring-brand-sky">
+                        <datalist id="classes-suggestions">
                             @foreach ($classes as $classeOption)
-                                <option value="{{ $classeOption }}" @selected(old('classe') === $classeOption)>{{ $classeOption }}</option>
+                                <option value="{{ $classeOption }}">
                             @endforeach
-                        </select>
+                        </datalist>
                         <x-input-error :messages="$errors->get('classe')" class="mt-1" />
                     </div>
 
                     <div>
-                        <x-input-label for="annee_scolaire" value="Année scolaire" />
+                        <x-input-label for="annee_scolaire" value="Année scolaire (facultatif)" />
                         <x-text-input id="annee_scolaire" name="annee_scolaire" type="text" class="mt-1 block w-full"
-                            :value="old('annee_scolaire', $anneeScolaireCourante)" required />
+                            placeholder="Détectée automatiquement dans le PDF si laissé vide"
+                            :value="old('annee_scolaire')" />
                         <x-input-error :messages="$errors->get('annee_scolaire')" class="mt-1" />
                     </div>
 

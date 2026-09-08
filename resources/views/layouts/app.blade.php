@@ -13,19 +13,52 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        @if (config('ecole.slug') === 'ucao')
+            {{-- Recolore en rose toute l'interface authentifiée (boutons, liens,
+            nav, focus...) qui utilise les classes Tailwind brand-sky / brand-sky-deep
+            — voir resources/css/app.css pour les valeurs par défaut (bleu marine CSS). --}}
+            <style>
+                :root {
+                    --brand-sky: 224 80 122;
+                    --brand-sky-deep: 194 55 100;
+                }
+            </style>
+        @elseif (config('ecole.slug') === 'jean-baptiste')
+            {{-- Recolore en vert toute l'interface authentifiée (boutons, liens,
+            nav, focus...) — même mécanisme que UCAO ci-dessus, valeurs reprises
+            de brand-green / brand-green-deep (tailwind.config.js). --}}
+            <style>
+                :root {
+                    --brand-sky: 76 175 109;
+                    --brand-sky-deep: 55 146 88;
+                }
+            </style>
+        @endif
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-white">
-            @include('layouts.navigation')
+        <div class="relative min-h-screen isolate">
+            <!-- Arrière-plan : logo de l'école agrandi et flouté, effet verre dépoli -->
+            <div class="fixed inset-0 -z-10 overflow-hidden bg-gray-50">
+                <div
+                    class="absolute inset-0 bg-center bg-cover scale-125"
+                    style="background-image: url('{{ asset(config('ecole.logo')) }}'); filter: blur(48px) saturate(1.15);"
+                ></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-brand-sky/20 via-white/70 to-brand-salmon/10"></div>
+            </div>
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+            <div class="bg-white/70 backdrop-blur-md shadow-sm">
+                @include('layouts.navigation')
+
+                <!-- Page Heading -->
+                @isset($header)
+                    <header class="border-t border-white/60">
+                        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                            {{ $header }}
+                        </div>
+                    </header>
+                @endisset
+            </div>
 
             <!-- Page Content -->
             <main>

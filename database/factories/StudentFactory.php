@@ -16,6 +16,9 @@ class StudentFactory extends Factory
         $sexe = $this->faker->randomElement(['M', 'F']);
 
         return [
+            // Le matricule provient de la liste officielle de l'établissement : il
+            // n'est pas généré par l'application, la factory en fabrique donc un.
+            'matricule' => $this->faker->unique()->numerify('############'),
             'nom' => strtoupper($this->faker->lastName()),
             'prenoms' => $sexe === 'M' ? $this->faker->firstNameMale() : $this->faker->firstNameFemale(),
             'date_naissance' => $this->faker->dateTimeBetween('-14 years', '-3 years')->format('Y-m-d'),

@@ -32,6 +32,14 @@
     </div>
 
     <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+            <x-input-label for="matricule" value="N° Matricule" />
+            <x-text-input id="matricule" name="matricule" type="text" class="mt-1 block w-full font-mono"
+                :value="old('matricule', $eleve?->matricule)" placeholder="Ex : 1130823020629" required />
+            <p class="text-xs text-gray-500 mt-1">Matricule officiel de l'élève, tel qu'il figure sur la liste de l'établissement.</p>
+            <x-input-error :messages="$errors->get('matricule')" class="mt-1" />
+        </div>
+
         <div>
             <x-input-label for="nom" value="Nom" />
             <x-text-input id="nom" name="nom" type="text" class="mt-1 block w-full" :value="old('nom', $eleve?->nom)" required autofocus />
@@ -89,6 +97,25 @@
             <x-text-input id="annee_scolaire" name="annee_scolaire" type="text" class="mt-1 block w-full"
                 :value="old('annee_scolaire', $eleve?->annee_scolaire ?? $anneeScolaireCourante ?? config('ecole.annee_scolaire_courante'))" required />
             <x-input-error :messages="$errors->get('annee_scolaire')" class="mt-1" />
+        </div>
+
+        <div class="sm:col-span-2">
+            <x-input-label for="signature" value="Signature de l'élève" />
+            <p class="text-xs text-gray-500 mb-2">
+                Photo ou scan de la signature manuscrite de l'élève. Elle sera imprimée sur le recto de la
+                carte scolaire, au-dessus de la mention « Le (La) Titulaire ».
+            </p>
+
+            <div class="flex items-center gap-4">
+                @if ($eleve?->signature)
+                    <div class="flex-none w-32 h-16 border border-gray-200 rounded-md bg-gray-50 flex items-center justify-center overflow-hidden">
+                        <img src="{{ asset('storage/'.$eleve->signature) }}" alt="Signature actuelle" class="max-w-full max-h-full object-contain">
+                    </div>
+                @endif
+                <input id="signature" name="signature" type="file" accept="image/*"
+                    class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-brand-sky file:text-white file:text-sm hover:file:bg-brand-sky-deep">
+            </div>
+            <x-input-error :messages="$errors->get('signature')" class="mt-1" />
         </div>
 
         @if ($eleve)

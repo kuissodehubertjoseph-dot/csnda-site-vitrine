@@ -11,12 +11,18 @@ class PasswordUpdateTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function etablissementId(): int
+    {
+        return \App\Models\Etablissement::where('slug', 'css')->value('id');
+    }
+
     public function test_password_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => User::ROLE_DEVELOPPEUR]);
 
         $response = $this
             ->actingAs($user)
+            ->withSession(['etablissement_id' => $this->etablissementId()])
             ->from('/profile')
             ->put('/password', [
                 'current_password' => 'password',
@@ -33,10 +39,11 @@ class PasswordUpdateTest extends TestCase
 
     public function test_correct_password_must_be_provided_to_update_password(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => User::ROLE_DEVELOPPEUR]);
 
         $response = $this
             ->actingAs($user)
+            ->withSession(['etablissement_id' => $this->etablissementId()])
             ->from('/profile')
             ->put('/password', [
                 'current_password' => 'wrong-password',

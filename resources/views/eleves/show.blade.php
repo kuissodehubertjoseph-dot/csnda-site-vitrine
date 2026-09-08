@@ -56,7 +56,13 @@
                         </div>
                         <div>
                             <dt class="text-xs uppercase tracking-wide text-gray-500">Date de naissance</dt>
-                            <dd class="mt-1 text-brand-ink">{{ $eleve->date_naissance->format('d/m/Y') }} ({{ $eleve->age }} ans)</dd>
+                            <dd class="mt-1 text-brand-ink">
+                                @if($eleve->date_naissance)
+                                    {{ $eleve->date_naissance->format('d/m/Y') }} ({{ $eleve->age }} ans)
+                                @else
+                                    —
+                                @endif
+                            </dd>
                         </div>
                         <div>
                             <dt class="text-xs uppercase tracking-wide text-gray-500">Lieu de naissance</dt>

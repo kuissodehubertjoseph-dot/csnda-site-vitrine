@@ -17,6 +17,8 @@
 /public/build
 /public/hot
 /public/storage
+/public/images/signature-directeur.png
+/public/images/cachet-ecole.png
 /storage/*.key
 /storage/pail
 /vendor

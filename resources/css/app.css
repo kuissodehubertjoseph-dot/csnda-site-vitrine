@@ -2,14 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Palette officielle CSNDA — voir tailwind.config.js (brand-*) pour les classes utilitaires. */
+/* Palette officielle CSS (Cours de Soutien Scolaire) — voir tailwind.config.js (brand-*) pour les classes utilitaires. */
 :root {
-    --color-sky: #5EB3E4;
-    --color-sky-deep: #3E93C4;
+    --color-sky: #2D3F8B;
+    --color-sky-deep: #222F68;
     --color-green: #4CAF6D;
     --color-green-deep: #379258;
-    --color-salmon: #F2A6B0;
-    --color-salmon-deep: #E58B97;
+    --color-salmon: #D32F2F;
+    --color-salmon-deep: #B71C1C;
     --color-ink: #1A1A1A;
     --color-white: #FFFFFF;
+
+    /* Couleur "brand-sky" utilisée par les classes Tailwind bg-brand-sky /
+       text-brand-sky / border-brand-sky dans toute l'interface authentifiée
+       (boutons, liens, nav, focus...). Valeur par défaut = bleu marine CSS.
+       layouts/app.blade.php la redéfinit en rose pour l'établissement UCAO,
+       ce qui recolore automatiquement tous ces éléments sans toucher à
+       chaque vue individuellement. Triplet RGB (espaces) requis par la
+       syntaxe rgb(var(...) / <alpha-value>) de tailwind.config.js. */
+    --brand-sky: 45 63 139;
+    --brand-sky-deep: 34 47 104;
 }

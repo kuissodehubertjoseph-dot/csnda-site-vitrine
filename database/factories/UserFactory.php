@@ -30,7 +30,18 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => User::ROLE_SECRETAIRE,
         ];
+    }
+
+    /**
+     * Compte disposant de l'accès complet (direction).
+     */
+    public function dg(): static
+    {
+        return $this->state(fn (array $attributs) => [
+            'role' => User::ROLE_DG,
+        ]);
     }
 
     /**

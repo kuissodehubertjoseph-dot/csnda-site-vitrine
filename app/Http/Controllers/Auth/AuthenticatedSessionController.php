@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Etablissement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $utilisateur = Auth::user();
+        $etablissementId = $utilisateur->etablissement_id
+            ?? Etablissement::where('slug', 'css')->value('id');
+
+        if ($etablissementId) {
+            $request->session()->put('etablissement_id', $etablissementId);
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
@@ -38,6 +47,7 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('web')->logout();
 
+        $request->session()->forget('etablissement_id');
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
