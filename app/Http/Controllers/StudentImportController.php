@@ -168,7 +168,7 @@ class StudentImportController extends Controller
      */
     private function extraireEleves(string $texte): array
     {
-        $lignesBrutes = preg_split('/\r\n|\r|\n/', $texte) ?: [];
+        $lignesBrutes = $this->fusionnerLignesRepliees(preg_split('/\r\n|\r|\n/', $texte) ?: []);
         $resultat = [];
 
         foreach ($lignesBrutes as $ligneBrute) {
@@ -212,6 +212,69 @@ class StudentImportController extends Controller
             if ($ligneSimple !== null) {
                 $resultat[] = $ligneSimple;
             }
+        }
+
+        return $resultat;
+    }
+
+    /**
+     * Recolle les lignes qu'un export en tableau (ex. UCAO) a coupées sur
+     * plusieurs lignes de texte quand une cellule (le plus souvent les
+     * prénoms) déborde de la hauteur prévue pour la ligne — parfois jusqu'à
+     * couper un mot en plein milieu ("Marie-" / "Madeleine" sur deux lignes).
+     *
+     * Une ligne démarre un nouvel élève quand elle commence par le numéro
+     * d'ordre suivi du matricule ("5 2500222001 ...") ; toute ligne suivante
+     * qui n'en a pas la forme, et qui n'est pas elle-même une ligne d'en-tête
+     * / pied de page, est recollée à la précédente.
+     *
+     * @param  array<int, string>  $lignes
+     * @return array<int, string>
+     */
+    private function fusionnerLignesRepliees(array $lignes): array
+    {
+        $resultat = [];
+        $courante = null;
+
+        foreach ($lignes as $ligne) {
+            $ligneBrute = rtrim($ligne, "\r\n");
+            $ligneNettoyee = trim(preg_replace('/[\t ]+/u', ' ', $ligneBrute) ?? '');
+
+            if ($ligneNettoyee === '' || mb_strlen($ligneNettoyee) < 2) {
+                continue;
+            }
+
+            if (preg_match('/^(année scolaire|établissement|filière|classe|n°|no\.?|matricule|nom\b|effectif|liste des|république|realized by)/iu', $ligneNettoyee)) {
+                if ($courante !== null) {
+                    $resultat[] = $courante;
+                    $courante = null;
+                }
+
+                continue;
+            }
+
+            $debuteNouvelElement = preg_match('/^\d{1,3}\s+\d{4,15}\b/u', $ligneNettoyee) === 1;
+
+            if ($debuteNouvelElement || $courante === null) {
+                if ($courante !== null) {
+                    $resultat[] = $courante;
+                }
+
+                $courante = $ligneBrute;
+
+                continue;
+            }
+
+            // Continuation de la ligne précédente : un mot coupé en fin de
+            // ligne ("Marie-") se rattache directement, sinon on rejoint
+            // avec un espace.
+            $courante = str_ends_with(rtrim($courante), '-')
+                ? rtrim($courante).ltrim($ligneBrute)
+                : rtrim($courante).' '.ltrim($ligneBrute);
+        }
+
+        if ($courante !== null) {
+            $resultat[] = $courante;
         }
 
         return $resultat;
