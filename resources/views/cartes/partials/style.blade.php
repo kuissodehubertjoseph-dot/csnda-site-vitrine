@@ -699,6 +699,13 @@
         gap: 1.6mm;
     }
 
+    /* 7 lignes au lieu de 6 (élèves de Licence 1, avec la date d'expiration
+       en plus) : resserre l'espacement pour que la dernière ligne ne
+       chevauche pas le trait séparateur du pied de page. */
+    .ucao-champs--compact {
+        gap: 1mm;
+    }
+
     .ucao-champ {
         display: flex;
         align-items: flex-start;

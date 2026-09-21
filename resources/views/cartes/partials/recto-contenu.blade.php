@@ -21,7 +21,7 @@
 
     <div class="ucao-corps">
         @php($neLeAffiche = ($eleve->date_naissance?->format('d/m/Y') ?? '—').' à '.$eleve->lieu_naissance)
-        <div class="ucao-champs">
+        <div class="ucao-champs @if (str_starts_with($eleve->classe, 'Licence 1')) ucao-champs--compact @endif">
             <div class="ucao-champ"><span class="ucao-etiquette">Nom :</span><span class="ucao-valeur">{{ mb_strtoupper($eleve->nom) }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Prénoms :</span><span class="ucao-valeur">{{ $eleve->prenoms }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Né(e) le :</span><span class="ucao-valeur">{{ $neLeAffiche }}</span></div>
