@@ -56,6 +56,7 @@
                                     <th class="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Sexe</th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Date de naissance</th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Lieu de naissance</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">Téléphone</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-100">
@@ -98,6 +99,10 @@
                                         <td class="px-3 py-2">
                                             <input type="text" name="lignes[{{ $i }}][lieu_naissance]" value="{{ $ligne['lieu_naissance'] ?? '' }}"
                                                 class="w-32 rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-sky focus:ring-brand-sky">
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            <input type="text" name="lignes[{{ $i }}][telephone]" value="{{ $ligne['telephone'] ?? '' }}"
+                                                class="w-36 rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-sky focus:ring-brand-sky">
                                         </td>
                                     </tr>
                                 @endforeach

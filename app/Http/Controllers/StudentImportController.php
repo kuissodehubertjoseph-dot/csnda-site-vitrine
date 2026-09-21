@@ -76,6 +76,7 @@ class StudentImportController extends Controller
             'lignes.*.sexe' => ['nullable', 'string', 'in:M,F'],
             'lignes.*.date_naissance' => ['nullable', 'date'],
             'lignes.*.lieu_naissance' => ['nullable', 'string', 'max:100'],
+            'lignes.*.telephone' => ['nullable', 'string', 'max:30'],
         ]);
 
         $cree = 0;
@@ -110,6 +111,7 @@ class StudentImportController extends Controller
                 'sexe' => $ligne['sexe'] ?? null,
                 'date_naissance' => $ligne['date_naissance'] ?? null,
                 'lieu_naissance' => trim((string) ($ligne['lieu_naissance'] ?? '')) ?: null,
+                'telephone' => trim((string) ($ligne['telephone'] ?? '')) ?: null,
                 'classe' => $data['classe'],
                 'annee_scolaire' => $data['annee_scolaire'],
                 'statut' => 'actif',
@@ -170,6 +172,7 @@ class StudentImportController extends Controller
         $resultat = [];
 
         foreach ($lignesBrutes as $ligneBrute) {
+            $ligneOriginale = trim($ligneBrute);
             $ligne = trim(preg_replace('/[\t ]+/u', ' ', $ligneBrute) ?? '');
 
             if ($ligne === '' || mb_strlen($ligne) < 3) {
@@ -180,7 +183,19 @@ class StudentImportController extends Controller
             // contiennent de toute façon jamais le motif sexe+date+lieu ci-dessous).
             // Note : pas de \b après "n°", le caractère "°" n'étant pas un
             // caractère de mot, la limite ne se déclencherait jamais.
-            if (preg_match('/^(année scolaire|établissement|classe|n°|no\.?|matricule|nom\b|effectif|liste des|république|realized by)/iu', $ligne)) {
+            if (preg_match('/^(année scolaire|établissement|filière|classe|n°|no\.?|matricule|nom\b|effectif|liste des|république|realized by)/iu', $ligne)) {
+                continue;
+            }
+
+            // Exports en tableau (colonnes séparées par des tabulations dans le
+            // flux texte du PDF, ex. UCAO) : à tenter en premier, car ce format
+            // ne contient pas forcément le sexe, contrairement au format
+            // Bénin/MESTFP ci-dessous.
+            $ligneTableau = $this->extraireLigneTableauColonnes($ligneOriginale);
+
+            if ($ligneTableau !== null) {
+                $resultat[] = $ligneTableau;
+
                 continue;
             }
 
@@ -246,6 +261,91 @@ class StudentImportController extends Controller
             'sexe' => $sexe,
             'date_naissance' => $dateNaissance,
             'lieu_naissance' => $lieuNaissance,
+            'telephone' => '',
+        ];
+    }
+
+    /**
+     * Format tableau à colonnes tabulées : "N° Matricule NOM[TAB]Prénom(s)[TAB]
+     * Lieu de naissance[TAB]Date de naissance Sexe Téléphone" (ex. exports
+     * UCAO). Le flux texte du PDF conserve une tabulation entre chaque
+     * colonne ; c'est ce séparateur, bien plus fiable qu'une heuristique sur
+     * les majuscules, qui permet de découper la ligne correctement. La
+     * colonne Sexe est souvent laissée vide dans ce type d'export : elle est
+     * alors à compléter manuellement sur l'écran de vérification.
+     *
+     * Certaines lignes perdent une tabulation quand une cellule déborde sur
+     * la largeur de colonne (nom composé de deux mots, par ex.) : dans ce cas
+     * on retombe sur la même heuristique "mots en MAJUSCULES = nom" que le
+     * format simple, appliquée au segment restant.
+     *
+     * @return array{matricule: string, nom: string, prenoms: string, sexe: string, date_naissance: string, lieu_naissance: string, telephone: string}|null
+     */
+    private function extraireLigneTableauColonnes(string $ligneBrute): ?array
+    {
+        if (! str_contains($ligneBrute, "\t")) {
+            return null;
+        }
+
+        $segments = array_values(array_filter(
+            array_map('trim', explode("\t", $ligneBrute)),
+            fn ($segment) => $segment !== ''
+        ));
+
+        if (count($segments) < 2) {
+            return null;
+        }
+
+        $dernier = array_pop($segments);
+
+        // La dernière colonne contient toujours la date de naissance, parfois
+        // précédée du lieu (si sa propre tabulation a été perdue) et suivie
+        // du téléphone.
+        if (! preg_match('/^(?<lieu>.*?)\s*(?<jour>\d{1,2})\/(?<mois>\d{1,2})\/(?<annee>\d{4})\s*(?<telephone>[+\d][\d\s]*)?$/u', $dernier, $mDate)) {
+            return null;
+        }
+
+        $dateNaissance = sprintf('%04d-%02d-%02d', (int) $mDate['annee'], (int) $mDate['mois'], (int) $mDate['jour']);
+        $telephone = trim($mDate['telephone'] ?? '');
+        $lieuNaissance = trim($mDate['lieu']) !== '' ? $this->normaliserLieu($mDate['lieu']) : '';
+
+        // Première colonne restante : "N° Matricule Nom[...]" (ordre et
+        // matricule séparés par un espace, contrairement au format Bénin/MESTFP).
+        if (! preg_match('/^(?<ordre>\d{1,3})\s+(?<matricule>\d{4,15})\s+(?<reste>.+)$/u', $segments[0] ?? '', $mTete)) {
+            return null;
+        }
+
+        $matricule = $mTete['matricule'];
+
+        if (count($segments) >= 3) {
+            // Colonnes complètes : Nom / Prénoms / Lieu chacun dans leur segment.
+            $nom = trim($mTete['reste']);
+            $prenoms = trim($segments[1]);
+
+            if ($lieuNaissance === '' && isset($segments[2])) {
+                $lieuNaissance = $this->normaliserLieu($segments[2]);
+            }
+        } elseif (count($segments) === 2) {
+            $nom = trim($mTete['reste']);
+            $prenoms = trim($segments[1]);
+        } else {
+            // Nom et prénoms compressés dans le même segment : on retombe sur
+            // l'heuristique "mots en MAJUSCULES en tête = nom".
+            [$nom, $prenoms] = $this->separerNomPrenoms(trim($mTete['reste']));
+        }
+
+        if ($matricule === '' || $nom === '') {
+            return null;
+        }
+
+        return [
+            'matricule' => $matricule,
+            'nom' => $nom,
+            'prenoms' => $prenoms,
+            'sexe' => '',
+            'date_naissance' => $dateNaissance,
+            'lieu_naissance' => $lieuNaissance,
+            'telephone' => $telephone,
         ];
     }
 
@@ -291,6 +391,7 @@ class StudentImportController extends Controller
             'sexe' => '',
             'date_naissance' => '',
             'lieu_naissance' => '',
+            'telephone' => '',
         ];
     }
 
