@@ -706,6 +706,11 @@
         gap: 1mm;
     }
 
+    .ucao-etiquette-expire,
+    .ucao-valeur-expire {
+        color: var(--ucao-rouge);
+    }
+
     .ucao-champ {
         display: flex;
         align-items: flex-start;

@@ -29,7 +29,7 @@
             <div class="ucao-champ"><span class="ucao-etiquette">Matricule :</span><span class="ucao-valeur">{{ $eleve->matricule }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Contact :</span><span class="ucao-valeur">{{ $eleve->telephone ?: '—' }}</span></div>
             @if (str_starts_with($eleve->classe, 'Licence 1'))
-                <div class="ucao-champ"><span class="ucao-etiquette">Expire :</span><span class="ucao-valeur">31/07/2029</span></div>
+                <div class="ucao-champ"><span class="ucao-etiquette ucao-etiquette-expire">Expire :</span><span class="ucao-valeur ucao-valeur-expire">31/07/2029</span></div>
             @endif
         </div>
 
