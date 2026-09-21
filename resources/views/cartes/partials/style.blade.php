@@ -593,7 +593,8 @@
        dégradé continu bleu → beige → rose (pas de blocs diagonaux), nom de
        l'école en haut, tutelle (UCAO) en bas. Classes préfixées "ucao-",
        utilisées uniquement par cartes.partials.recto-contenu / verso-contenu
-       quand config('ecole.slug') === 'ucao' — n'affecte aucune autre carte. */
+       quand config('ecole.slug') vaut 'ucao' ou 'egei' — n'affecte aucune
+       autre carte. */
     :root {
         --ucao-bleu: #22aced;
         --ucao-bleu-texte: #1d4e89;

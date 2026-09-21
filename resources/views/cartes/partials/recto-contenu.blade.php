@@ -1,6 +1,6 @@
 {{-- Contenu du recto pour un élève donné. Attend $eleve et, en boucle, $logoDataUri. --}}
 @php($logo = $logoDataUri ?? \App\Support\Ecole::logoDataUri())
-@if (config('ecole.slug') === 'ucao')
+@if (in_array(config('ecole.slug'), ['ucao', 'egei'], true))
     <div class="ucao-fond-recto">
     <div class="ucao-entete">
         <div class="ucao-logo">
@@ -28,6 +28,9 @@
             <div class="ucao-champ"><span class="ucao-etiquette">Niveau-Filière :</span><span class="ucao-valeur">{{ $eleve->classe }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Matricule :</span><span class="ucao-valeur">{{ $eleve->matricule }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Contact :</span><span class="ucao-valeur">{{ $eleve->telephone ?: '—' }}</span></div>
+            @if (str_starts_with($eleve->classe, 'Licence 1'))
+                <div class="ucao-champ"><span class="ucao-etiquette">Expire :</span><span class="ucao-valeur">31/07/2029</span></div>
+            @endif
         </div>
 
         <div class="ucao-zone-photo">

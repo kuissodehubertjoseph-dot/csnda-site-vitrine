@@ -14,7 +14,7 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-        @if (config('ecole.slug') === 'ucao')
+        @if (in_array(config('ecole.slug'), ['ucao', 'egei'], true))
             {{-- Recolore en rose toute l'interface authentifiée (boutons, liens,
             nav, focus...) qui utilise les classes Tailwind brand-sky / brand-sky-deep
             — voir resources/css/app.css pour les valeurs par défaut (bleu marine CSS). --}}

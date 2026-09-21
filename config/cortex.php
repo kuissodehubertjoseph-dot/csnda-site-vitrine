@@ -54,8 +54,10 @@ return [
             'statut' => 'actif',
         ],
         [
-            'nom' => 'PIGIER Bénin',
-            'statut' => 'bientot',
+            'nom' => 'UCAO-ECOLE DE GENIE ELECTRIQUE ET INFORMATIQUE (EGEI)',
+            'logo' => 'images/UCAO.png',
+            'slug' => 'egei',
+            'statut' => 'actif',
         ],
         [
             'nom' => 'QSI International School of Benin',

@@ -67,7 +67,7 @@
                     align-items: center;
                     justify-content: center;
                     gap: 1rem;
-                    background: linear-gradient(135deg, {{ config('ecole.slug') === 'ucao' ? '#E85D9C 0%, #C43B7A 100%' : '#5EB3E4 0%, #3E93C4 100%' }});
+                    background: linear-gradient(135deg, {{ in_array(config('ecole.slug'), ['ucao', 'egei'], true) ? '#E85D9C 0%, #C43B7A 100%' : '#5EB3E4 0%, #3E93C4 100%' }});
                     transition: opacity 0.5s ease, visibility 0.5s ease;
                 }
 
