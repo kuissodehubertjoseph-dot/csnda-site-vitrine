@@ -706,11 +706,6 @@
         gap: 1mm;
     }
 
-    .ucao-etiquette-expire,
-    .ucao-valeur-expire {
-        color: var(--ucao-rouge);
-    }
-
     .ucao-champ {
         display: flex;
         align-items: flex-start;
@@ -731,6 +726,14 @@
         color: #000000;
         min-width: 0;
         overflow-wrap: break-word;
+    }
+
+    /* Doit rester déclaré après .ucao-etiquette / .ucao-valeur ci-dessus
+       pour l'emporter sur leur color:#000000 (même spécificité, l'ordre
+       dans la feuille de style tranche). */
+    .ucao-etiquette-expire,
+    .ucao-valeur-expire {
+        color: var(--ucao-rouge);
     }
 
     .ucao-zone-photo {
