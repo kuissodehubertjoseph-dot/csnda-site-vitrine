@@ -266,87 +266,119 @@ class StudentImportController extends Controller
     }
 
     /**
-     * Format tableau à colonnes tabulées : "N° Matricule NOM[TAB]Prénom(s)[TAB]
-     * Lieu de naissance[TAB]Date de naissance Sexe Téléphone" (ex. exports
-     * UCAO). Le flux texte du PDF conserve une tabulation entre chaque
-     * colonne ; c'est ce séparateur, bien plus fiable qu'une heuristique sur
-     * les majuscules, qui permet de découper la ligne correctement. La
-     * colonne Sexe est souvent laissée vide dans ce type d'export : elle est
-     * alors à compléter manuellement sur l'écran de vérification.
+     * Format tableau : "N° Matricule NOM[TAB]Prénom(s)[TAB]Lieu de
+     * naissance[TAB]Date de naissance Sexe Téléphone" (ex. exports UCAO).
+     * Le flux texte du PDF conserve en principe une tabulation entre chaque
+     * colonne, mais elle disparaît par endroits quand une cellule déborde de
+     * la largeur prévue (nom en plusieurs mots, prénoms longs...) : selon le
+     * cas, c'est la frontière nom/prénoms qui saute, ou celle
+     * prénoms/lieu, ou même toutes les deux à la fois. On repère donc
+     * d'abord la date n'importe où dans la ligne (ancre fiable, jamais
+     * ambiguë), puis on ne s'appuie sur les tabulations restantes que
+     * lorsqu'elles existent, avec un repli heuristique sinon.
      *
-     * Certaines lignes perdent une tabulation quand une cellule déborde sur
-     * la largeur de colonne (nom composé de deux mots, par ex.) : dans ce cas
-     * on retombe sur la même heuristique "mots en MAJUSCULES = nom" que le
-     * format simple, appliquée au segment restant.
+     * Contrairement au format Bénin/MESTFP, le sexe n'est jamais collé à la
+     * date ici : la colonne Sexe est le plus souvent laissée vide dans ce
+     * type d'export, à compléter manuellement sur l'écran de vérification.
+     * On exclut donc explicitement les lignes qui portent la signature du
+     * format MESTFP (sexe collé, ex. "M26/08/2012"), pour leur laisser
+     * suivre extraireLigneComplete() sans risque de confusion.
      *
      * @return array{matricule: string, nom: string, prenoms: string, sexe: string, date_naissance: string, lieu_naissance: string, telephone: string}|null
      */
     private function extraireLigneTableauColonnes(string $ligneBrute): ?array
     {
-        if (! str_contains($ligneBrute, "\t")) {
+        if (preg_match('/\s[MF]\d{1,2}\/\d{1,2}\/\d{4}/u', $ligneBrute)) {
             return null;
         }
 
-        $segments = array_values(array_filter(
-            array_map('trim', explode("\t", $ligneBrute)),
-            fn ($segment) => $segment !== ''
-        ));
-
-        if (count($segments) < 2) {
-            return null;
-        }
-
-        $dernier = array_pop($segments);
-
-        // La dernière colonne contient toujours la date de naissance, parfois
-        // précédée du lieu (si sa propre tabulation a été perdue) et suivie
-        // du téléphone.
-        if (! preg_match('/^(?<lieu>.*?)\s*(?<jour>\d{1,2})\/(?<mois>\d{1,2})\/(?<annee>\d{4})\s*(?<telephone>[+\d][\d\s]*)?$/u', $dernier, $mDate)) {
+        if (! preg_match('/^(?<avant>.+?)\s*(?<jour>\d{1,2})\/(?<mois>\d{1,2})\/(?<annee>\d{4})\s*(?<telephone>[+\d][\d\s]*)?$/u', trim($ligneBrute), $mDate)) {
             return null;
         }
 
         $dateNaissance = sprintf('%04d-%02d-%02d', (int) $mDate['annee'], (int) $mDate['mois'], (int) $mDate['jour']);
         $telephone = trim($mDate['telephone'] ?? '');
-        $lieuNaissance = trim($mDate['lieu']) !== '' ? $this->normaliserLieu($mDate['lieu']) : '';
 
-        // Première colonne restante : "N° Matricule Nom[...]" (ordre et
-        // matricule séparés par un espace, contrairement au format Bénin/MESTFP).
-        if (! preg_match('/^(?<ordre>\d{1,3})\s+(?<matricule>\d{4,15})\s+(?<reste>.+)$/u', $segments[0] ?? '', $mTete)) {
+        // Numéro d'ordre + matricule, séparés par un espace (contrairement au
+        // format Bénin/MESTFP où ils sont collés).
+        if (! preg_match('/^(?<ordre>\d{1,3})\s+(?<matricule>\d{4,15})\s+(?<reste>.+)$/u', trim($mDate['avant']), $mTete)) {
             return null;
         }
 
         $matricule = $mTete['matricule'];
 
-        if (count($segments) >= 3) {
-            // Colonnes complètes : Nom / Prénoms / Lieu chacun dans leur segment.
-            $nom = trim($mTete['reste']);
-            $prenoms = trim($segments[1]);
+        $morceaux = array_values(array_filter(
+            array_map('trim', explode("\t", $mTete['reste'])),
+            fn ($morceau) => $morceau !== ''
+        ));
 
-            if ($lieuNaissance === '' && isset($segments[2])) {
-                $lieuNaissance = $this->normaliserLieu($segments[2]);
-            }
-        } elseif (count($segments) === 2) {
-            $nom = trim($mTete['reste']);
-            $prenoms = trim($segments[1]);
-        } else {
-            // Nom et prénoms compressés dans le même segment : on retombe sur
-            // l'heuristique "mots en MAJUSCULES en tête = nom".
-            [$nom, $prenoms] = $this->separerNomPrenoms(trim($mTete['reste']));
+        if (empty($morceaux)) {
+            return null;
         }
 
-        if ($matricule === '' || $nom === '') {
+        [$nom, $blocRestant] = $this->separerNomPrenoms($morceaux[0]);
+
+        if ($nom === '') {
+            return null;
+        }
+
+        if ($blocRestant !== '') {
+            if (count($morceaux) > 1) {
+                // Prénoms trouvés en fin de 1er segment, lieu déjà isolé par
+                // sa propre tabulation dans le(s) segment(s) suivant(s).
+                $prenoms = $blocRestant;
+                $lieuNaissance = implode(' ', array_slice($morceaux, 1));
+            } else {
+                // Aucune tabulation restante : prénoms et lieu sont glués.
+                [$prenoms, $lieuNaissance] = $this->separerPrenomsLieu($blocRestant);
+            }
+        } elseif (count($morceaux) >= 3) {
+            // Nom / Prénoms / Lieu, chacun dans son propre segment.
+            $prenoms = $morceaux[1];
+            $lieuNaissance = implode(' ', array_slice($morceaux, 2));
+        } elseif (count($morceaux) === 2) {
+            // Nom isolé, mais prénoms et lieu glués dans le 2e segment.
+            [$prenoms, $lieuNaissance] = $this->separerPrenomsLieu($morceaux[1]);
+        } else {
+            $prenoms = '';
+            $lieuNaissance = '';
+        }
+
+        if ($matricule === '') {
             return null;
         }
 
         return [
             'matricule' => $matricule,
             'nom' => $nom,
-            'prenoms' => $prenoms,
+            'prenoms' => trim($prenoms),
             'sexe' => '',
             'date_naissance' => $dateNaissance,
-            'lieu_naissance' => $lieuNaissance,
+            'lieu_naissance' => $lieuNaissance !== '' ? $this->normaliserLieu($lieuNaissance) : '',
             'telephone' => $telephone,
         ];
+    }
+
+    /**
+     * Sépare un bloc "Prénom(s) Lieu" glué (tabulation perdue à la mise en
+     * page) en isolant le dernier mot comme lieu de naissance : heuristique
+     * raisonnable pour les listes béninoises (le lieu suit toujours les
+     * prénoms), à vérifier sur l'écran de contrôle si le prénom compte
+     * lui-même plusieurs mots.
+     *
+     * @return array{0: string, 1: string} [prénoms, lieu]
+     */
+    private function separerPrenomsLieu(string $bloc): array
+    {
+        $mots = preg_split('/\s+/u', trim($bloc)) ?: [];
+
+        if (count($mots) < 2) {
+            return [trim($bloc), ''];
+        }
+
+        $lieu = array_pop($mots);
+
+        return [implode(' ', $mots), $lieu];
     }
 
     /**
