@@ -803,14 +803,14 @@
         font-size: 1.9mm;
         font-weight: 800;
         letter-spacing: 0.2px;
-        color: var(--ucao-bleu-texte);
+        color: #10305c;
     }
 
     .ucao-pied-ligne2 {
         font-size: 1.6mm;
         font-weight: 700;
         letter-spacing: 0.2px;
-        color: var(--ucao-bleu-texte);
+        color: #10305c;
         margin-top: 0.2mm;
     }
 
