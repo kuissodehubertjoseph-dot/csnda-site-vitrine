@@ -607,8 +607,8 @@
         flex: none;
         display: flex;
         align-items: flex-start;
-        gap: 0.3mm;
-        padding: 1.3mm 3.5mm 0;
+        gap: 0mm;
+        padding: 1.3mm 3.5mm 0 2.3mm;
     }
 
     .ucao-logo {
