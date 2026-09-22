@@ -8,8 +8,8 @@
         </div>
         <div class="ucao-identite">
             <div class="ucao-nom-bloc">
-                <div class="ucao-nom-etablissement">{{ config('ecole.nom_ligne1') }}</div>
-                <div class="ucao-nom-etablissement ucao-nom-etablissement-centre">{{ config('ecole.nom_ligne2') }}</div>
+                <div class="ucao-nom-etablissement">{{ config('ecole.tutelle_ligne1') }}</div>
+                <div class="ucao-nom-etablissement ucao-nom-etablissement-centre">{{ config('ecole.tutelle_ligne2') }}</div>
                 <div class="ucao-nom-trait"></div>
                 <div class="ucao-titre-ligne">
                     <div class="ucao-titre">CARTE D'APPRENANT</div>
@@ -55,8 +55,8 @@
     </div>
 
     <div class="ucao-pied">
-        <div class="ucao-pied-ligne1">{{ config('ecole.tutelle_ligne1') }}</div>
-        <div class="ucao-pied-ligne2">{{ config('ecole.tutelle_ligne2') }}</div>
+        <div class="ucao-pied-ligne1">{{ config('ecole.nom_ligne1') }}</div>
+        <div class="ucao-pied-ligne2">{{ config('ecole.nom_ligne2') }}</div>
     </div>
     </div>
 @else
