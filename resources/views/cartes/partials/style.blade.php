@@ -677,8 +677,8 @@
 
     .ucao-annee {
         margin-top: 0.1mm;
-        font-size: 1.6mm;
-        font-weight: 700;
+        font-size: 2.1mm;
+        font-weight: 900;
         color: var(--color-ink);
     }
 
