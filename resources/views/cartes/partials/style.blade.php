@@ -617,8 +617,6 @@
         height: 9mm;
         border-radius: 50%;
         overflow: hidden;
-        background: var(--color-white);
-        border: 0.25mm solid var(--color-white);
         margin-top: 0.2mm;
     }
 
