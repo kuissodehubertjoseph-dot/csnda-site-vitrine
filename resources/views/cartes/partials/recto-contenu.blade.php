@@ -12,7 +12,7 @@
                 <div class="ucao-nom-etablissement ucao-nom-etablissement-centre">{{ config('ecole.nom_ligne2') }}</div>
                 <div class="ucao-nom-trait"></div>
                 <div class="ucao-titre-ligne">
-                    <div class="ucao-titre">CARTE D'ETUDIANT</div>
+                    <div class="ucao-titre">CARTE D'APPRENANT</div>
                     <div class="ucao-annee">{{ $eleve->annee_scolaire }}</div>
                 </div>
             </div>
