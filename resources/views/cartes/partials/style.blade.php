@@ -617,14 +617,14 @@
         height: 9mm;
         border-radius: 50%;
         overflow: hidden;
-        background: var(--color-white);
+        background: rgba(255, 255, 255, 0.55);
         margin-top: 0.2mm;
     }
 
     .ucao-logo img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         display: block;
     }
 
