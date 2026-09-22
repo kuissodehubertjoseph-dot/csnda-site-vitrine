@@ -21,15 +21,21 @@
 
     <div class="ucao-corps">
         @php($neLeAffiche = ($eleve->date_naissance?->format('d/m/Y') ?? '—').' à '.$eleve->lieu_naissance)
-        <div class="ucao-champs @if (str_starts_with($eleve->classe, 'Licence 1')) ucao-champs--compact @endif">
+        @php($dateExpiration = match (true) {
+            str_starts_with($eleve->classe, 'Licence 1') => '31/07/2029',
+            str_starts_with($eleve->classe, 'Licence 2') => '31/07/2028',
+            str_starts_with($eleve->classe, 'Licence 3') => '31/07/2027',
+            default => null,
+        })
+        <div class="ucao-champs @if ($dateExpiration) ucao-champs--compact @endif">
             <div class="ucao-champ"><span class="ucao-etiquette">Nom :</span><span class="ucao-valeur">{{ mb_strtoupper($eleve->nom) }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Prénoms :</span><span class="ucao-valeur">{{ $eleve->prenoms }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Né(e) le :</span><span class="ucao-valeur">{{ $neLeAffiche }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Niveau-Filière :</span><span class="ucao-valeur">{{ $eleve->classe }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Matricule :</span><span class="ucao-valeur">{{ $eleve->matricule }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Contact :</span><span class="ucao-valeur">{{ $eleve->telephone ?: '—' }}</span></div>
-            @if (str_starts_with($eleve->classe, 'Licence 1'))
-                <div class="ucao-champ"><span class="ucao-etiquette ucao-etiquette-expire">Expire :</span><span class="ucao-valeur ucao-valeur-expire">31/07/2029</span></div>
+            @if ($dateExpiration)
+                <div class="ucao-champ"><span class="ucao-etiquette ucao-etiquette-expire">Expire :</span><span class="ucao-valeur ucao-valeur-expire">{{ $dateExpiration }}</span></div>
             @endif
         </div>
 
