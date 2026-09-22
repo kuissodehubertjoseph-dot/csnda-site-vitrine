@@ -640,7 +640,7 @@
         font-size: 2mm;
         font-weight: 800;
         letter-spacing: 0.1px;
-        color: #10305c;
+        color: var(--ucao-bleu-texte);
         text-align: left;
         white-space: nowrap;
     }
@@ -803,14 +803,14 @@
         font-size: 1.9mm;
         font-weight: 800;
         letter-spacing: 0.2px;
-        color: #10305c;
+        color: var(--ucao-bleu-texte);
     }
 
     .ucao-pied-ligne2 {
         font-size: 1.6mm;
         font-weight: 700;
         letter-spacing: 0.2px;
-        color: #10305c;
+        color: var(--ucao-rouge);
         margin-top: 0.2mm;
     }
 
