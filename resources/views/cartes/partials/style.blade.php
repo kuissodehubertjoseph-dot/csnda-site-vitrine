@@ -745,7 +745,7 @@
 
     .ucao-photo-cadre {
         width: 16mm;
-        height: 18mm;
+        height: 15.5mm;
         border-radius: 0.6mm;
         overflow: hidden;
         background: #f2f2f2;
