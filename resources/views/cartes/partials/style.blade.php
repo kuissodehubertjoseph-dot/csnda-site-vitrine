@@ -632,6 +632,7 @@
         flex: 1;
         min-width: 0;
         line-height: 1.15;
+        margin-top: -0.9mm;
     }
 
     .ucao-nom-etablissement {
