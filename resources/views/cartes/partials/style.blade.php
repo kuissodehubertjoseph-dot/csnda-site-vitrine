@@ -613,8 +613,8 @@
 
     .ucao-logo {
         flex: none;
-        width: 9mm;
-        height: 9mm;
+        width: 10.5mm;
+        height: 10.5mm;
         border-radius: 50%;
         overflow: hidden;
         background: rgba(255, 255, 255, 0.55);
