@@ -57,7 +57,7 @@
         min-height: 0;
 
         padding: 2.2mm 1.5mm 0.6mm;
-        background: linear-gradient(180deg, #f0c419 0%, #f0c419 20%, #e5e0de 30%, #e5e0de 46%, #e3f4fc 54%, #a9d9f2 64%, #1d8fd6 78%, #1d8fd6 100%);
+        background: linear-gradient(180deg, #f0c419 0%, #f0c419 20%, #e5e0de 30%, #e5e0de 46%, #e3f4fc 54%, #e3f4fc 65%, #a9d9f2 71%, #1d8fd6 85%, #1d8fd6 100%);
     }
 
     /* --- Recto : en-tête (logo, tutelle, drapeau) --- */
