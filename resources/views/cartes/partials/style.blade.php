@@ -618,7 +618,7 @@
         border-radius: 50%;
         overflow: hidden;
         background: rgba(255, 255, 255, 0.55);
-        margin-top: 2.4mm;
+        margin-top: 1mm;
     }
 
     .ucao-logo img {
