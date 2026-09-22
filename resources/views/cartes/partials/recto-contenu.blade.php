@@ -31,7 +31,7 @@
             <div class="ucao-champ"><span class="ucao-etiquette">Nom :</span><span class="ucao-valeur">{{ mb_strtoupper($eleve->nom) }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Prénoms :</span><span class="ucao-valeur">{{ $eleve->prenoms }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Né(e) le :</span><span class="ucao-valeur">{{ $neLeAffiche }}</span></div>
-            <div class="ucao-champ"><span class="ucao-etiquette">Niveau-Filière :</span><span class="ucao-valeur">{{ $eleve->classe }}</span></div>
+            <div class="ucao-champ"><span class="ucao-etiquette">Cycle-Filière :</span><span class="ucao-valeur">{{ $eleve->classe }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Matricule :</span><span class="ucao-valeur">{{ $eleve->matricule }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Contact :</span><span class="ucao-valeur">{{ $eleve->telephone ?: '—' }}</span></div>
             @if ($dateExpiration)
