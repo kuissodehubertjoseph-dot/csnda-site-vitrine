@@ -640,7 +640,7 @@
         font-size: 2mm;
         font-weight: 800;
         letter-spacing: 0.1px;
-        color: var(--ucao-bleu-texte);
+        color: #10305c;
         text-align: left;
         white-space: nowrap;
     }
