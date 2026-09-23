@@ -823,7 +823,7 @@
         justify-content: flex-start;
         text-align: center;
         gap: 0.6mm;
-        padding: 3mm 4mm 3mm;
+        padding: 6mm 4mm 3mm;
     }
 
     .ucao-verso-entete {
