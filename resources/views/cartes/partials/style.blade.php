@@ -838,7 +838,7 @@
     }
 
     .ucao-verso-entete-marron {
-        color: #7b2d26;
+        color: #000000;
     }
 
     .ucao-verso-coordonnees {
