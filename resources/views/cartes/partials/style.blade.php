@@ -637,7 +637,7 @@
     }
 
     .ucao-nom-etablissement {
-        font-size: 2mm;
+        font-size: 2.4mm;
         font-weight: 800;
         letter-spacing: 0.1px;
         color: var(--ucao-bleu-texte);
@@ -810,7 +810,7 @@
         font-size: 1.6mm;
         font-weight: 700;
         letter-spacing: 0.2px;
-        color: var(--ucao-rouge);
+        color: var(--ucao-bleu-texte);
         margin-top: 0.2mm;
     }
 
