@@ -807,7 +807,7 @@
         font-size: 1.9mm;
         font-weight: 800;
         letter-spacing: 0.2px;
-        color: #8fe0ff;
+        color: #ffffff;
         text-shadow: 0 0.15mm 0.3mm rgba(0, 0, 0, 0.55);
     }
 
@@ -815,7 +815,7 @@
         font-size: 1.6mm;
         font-weight: 700;
         letter-spacing: 0.2px;
-        color: #8fe0ff;
+        color: #ffffff;
         text-shadow: 0 0.15mm 0.3mm rgba(0, 0, 0, 0.55);
         margin-top: 0.2mm;
     }
