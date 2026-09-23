@@ -807,14 +807,14 @@
         font-size: 1.9mm;
         font-weight: 800;
         letter-spacing: 0.2px;
-        color: #dbeeff;
+        color: #4fb3f0;
     }
 
     .ucao-pied-ligne2 {
         font-size: 1.6mm;
         font-weight: 700;
         letter-spacing: 0.2px;
-        color: #dbeeff;
+        color: #4fb3f0;
         margin-top: 0.2mm;
     }
 
