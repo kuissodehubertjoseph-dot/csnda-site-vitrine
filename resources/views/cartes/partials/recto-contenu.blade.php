@@ -1,6 +1,13 @@
 {{-- Contenu du recto pour un élève donné. Attend $eleve et, en boucle, $logoDataUri. --}}
 @php($logo = $logoDataUri ?? \App\Support\Ecole::logoDataUri())
 @if (in_array(config('ecole.slug'), ['ucao', 'egei'], true))
+    @php($dateExpiration = match (true) {
+        str_starts_with($eleve->classe, 'Licence 1') => '31/07/2029',
+        str_starts_with($eleve->classe, 'Licence 2') => '31/07/2028',
+        str_starts_with($eleve->classe, 'Licence 3') => '31/07/2027',
+        default => null,
+    })
+    @php($anneeAffichee = $dateExpiration ? '2026-'.substr($dateExpiration, -4) : $eleve->annee_scolaire)
     <div class="ucao-fond-recto">
     <div class="ucao-entete">
         <div class="ucao-logo">
@@ -13,7 +20,7 @@
                 <div class="ucao-nom-trait"></div>
                 <div class="ucao-titre-ligne">
                     <div class="ucao-titre">CARTE D'APPRENANT</div>
-                    <div class="ucao-annee">{{ $eleve->annee_scolaire }}</div>
+                    <div class="ucao-annee">{{ $anneeAffichee }}</div>
                 </div>
             </div>
         </div>
@@ -21,12 +28,6 @@
 
     <div class="ucao-corps">
         @php($neLeAffiche = ($eleve->date_naissance?->format('d/m/Y') ?? '—').' à '.$eleve->lieu_naissance)
-        @php($dateExpiration = match (true) {
-            str_starts_with($eleve->classe, 'Licence 1') => '31/07/2029',
-            str_starts_with($eleve->classe, 'Licence 2') => '31/07/2028',
-            str_starts_with($eleve->classe, 'Licence 3') => '31/07/2027',
-            default => null,
-        })
         @php($cycleFiliereAffiche = preg_replace('/^Licence [123]\b/u', 'Licence', $eleve->classe))
         <div class="ucao-champs @if ($dateExpiration) ucao-champs--compact @endif">
             <div class="ucao-champ"><span class="ucao-etiquette">Nom :</span><span class="ucao-valeur">{{ mb_strtoupper($eleve->nom) }}</span></div>
