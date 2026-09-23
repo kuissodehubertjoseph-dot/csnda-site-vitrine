@@ -4,7 +4,7 @@
     pas en PVC couleur des deux côtés), texte centré uniquement. --}}
     <div class="ucao-verso-papier">
         <div class="ucao-verso-entete">{{ config('ecole.tutelle_ligne1') }}</div>
-        <div class="ucao-verso-entete">{{ config('ecole.tutelle_ligne2') }}</div>
+        <div class="ucao-verso-entete ucao-verso-entete-marron">{{ config('ecole.tutelle_ligne2') }}</div>
 
         <div class="ucao-verso-coordonnees">
             @if (config('ecole.siege_social'))

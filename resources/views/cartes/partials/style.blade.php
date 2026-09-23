@@ -833,6 +833,10 @@
         color: #000000;
     }
 
+    .ucao-verso-entete-marron {
+        color: #7b2d26;
+    }
+
     .ucao-verso-coordonnees {
         margin-top: 2.4mm;
         display: flex;
