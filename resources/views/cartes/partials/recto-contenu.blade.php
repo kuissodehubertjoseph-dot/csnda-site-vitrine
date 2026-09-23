@@ -9,7 +9,7 @@
         <div class="ucao-identite">
             <div class="ucao-nom-bloc">
                 <div class="ucao-nom-etablissement">{{ config('ecole.tutelle_ligne1') }}</div>
-                <div class="ucao-nom-etablissement ucao-nom-etablissement-centre">{{ config('ecole.tutelle_ligne2') }}</div>
+                <div class="ucao-nom-etablissement ucao-nom-etablissement-centre ucao-nom-etablissement-marron">{{ config('ecole.tutelle_ligne2') }}</div>
                 <div class="ucao-nom-trait"></div>
                 <div class="ucao-titre-ligne">
                     <div class="ucao-titre">CARTE D'APPRENANT</div>

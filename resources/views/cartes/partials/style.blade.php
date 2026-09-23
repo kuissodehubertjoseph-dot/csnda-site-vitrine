@@ -649,6 +649,10 @@
         text-align: center;
     }
 
+    .ucao-nom-etablissement-marron {
+        color: #7b2d26;
+    }
+
     /* Largeur ajustée au texte (pas à toute la carte) : le trait ne dépasse
        pas la ligne la plus longue ("ECOLE SUPERIEURE DE MANAGEMENT"), donc
        il commence au "O" et finit au "E" du texte, pas au bord de la carte. */
