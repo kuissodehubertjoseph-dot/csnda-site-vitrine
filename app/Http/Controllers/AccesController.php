@@ -24,14 +24,11 @@ class AccesController extends Controller
         $etablissementId = Student::etablissementActifId();
 
         return view('acces.index', [
-            // Un développeur (etablissement_id null) est visible depuis
-            // n'importe quel établissement ; les autres comptes ne le sont
-            // que depuis leur propre établissement, pour éviter toute fuite
-            // d'informations entre écoles.
-            'utilisateurs' => User::where(function ($requete) use ($etablissementId) {
-                $requete->whereNull('etablissement_id')->orWhere('etablissement_id', $etablissementId);
-            })->orderBy('name')->get(),
-            'roles' => User::ROLES,
+            'utilisateurs' => User::where('etablissement_id', $etablissementId)
+                ->where('role', '!=', User::ROLE_DEVELOPPEUR)
+                ->orderBy('name')
+                ->get(),
+            'roles' => array_diff_key(User::ROLES, [User::ROLE_DEVELOPPEUR => true]),
         ]);
     }
 
@@ -39,20 +36,17 @@ class AccesController extends Controller
     {
         Gate::authorize('gerer-acces');
 
-        // Le DG peut créer un accès développeur ; en revanche il ne pourra
-        // ensuite ni le modifier ni le supprimer (voir update() et destroy()).
         $donnees = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'string', 'email', 'max:150', 'unique:users,email'],
-            'role' => ['required', Rule::in(array_keys(User::ROLES))],
+            'role' => ['required', Rule::in([
+                User::ROLE_DG,
+                User::ROLE_SECRETAIRE,
+            ])],
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
-        // Un compte développeur n'est rattaché à aucun établissement
-        // précis : il peut se connecter à n'importe lequel.
-        $donnees['etablissement_id'] = $donnees['role'] === User::ROLE_DEVELOPPEUR
-            ? null
-            : Student::etablissementActifId();
+        $donnees['etablissement_id'] = Student::etablissementActifId();
 
         $utilisateur = User::create($donnees);
 
@@ -64,15 +58,14 @@ class AccesController extends Controller
         Gate::authorize('gerer-acces');
 
         $donnees = $request->validate([
-            'role' => ['required', Rule::in(array_keys(User::ROLES))],
+            'role' => ['required', Rule::in([
+                User::ROLE_DG,
+                User::ROLE_SECRETAIRE,
+            ])],
         ]);
 
-        // Un compte développeur existant ne peut être touché que par un développeur.
-        if ($utilisateur->estDeveloppeur() && Gate::denies('gerer-comptes-developpeur')) {
-            return back()->withErrors([
-                'role' => "Seul un développeur peut modifier le rôle d'un compte développeur.",
-            ]);
-        }
+        abort_unless($utilisateur->etablissement_id === Student::etablissementActifId()
+            && ! $utilisateur->estDeveloppeur(), 404);
 
         // Empêche le dernier DG de se rétrograder : l'application deviendrait
         // impossible à administrer.
@@ -93,14 +86,11 @@ class AccesController extends Controller
     {
         Gate::authorize('gerer-acces');
 
+        abort_unless($utilisateur->etablissement_id === Student::etablissementActifId()
+            && ! $utilisateur->estDeveloppeur(), 404);
+
         if ($utilisateur->is($request->user())) {
             return back()->withErrors(['acces' => 'Vous ne pouvez pas supprimer votre propre accès.']);
-        }
-
-        if ($utilisateur->estDeveloppeur() && Gate::denies('gerer-comptes-developpeur')) {
-            return back()->withErrors([
-                'acces' => "Seul un développeur peut supprimer un compte développeur.",
-            ]);
         }
 
         if ($utilisateur->estDg() && User::where('role', User::ROLE_DG)->where('etablissement_id', $utilisateur->etablissement_id)->count() <= 1) {

@@ -48,7 +48,7 @@
                         </div>
                         <div>
                             <dt class="text-xs uppercase tracking-wide text-gray-500">Classe</dt>
-                            <dd class="mt-1 text-brand-ink">{{ $eleve->classe }}</dd>
+                            <dd class="mt-1 text-brand-ink">{{ \App\Support\Classe::html($eleve->classe) }}</dd>
                         </div>
                         <div>
                             <dt class="text-xs uppercase tracking-wide text-gray-500">Année scolaire</dt>
@@ -70,7 +70,7 @@
                         </div>
                         <div>
                             <dt class="text-xs uppercase tracking-wide text-gray-500">Sexe</dt>
-                            <dd class="mt-1 text-brand-ink">{{ $eleve->sexe === 'M' ? 'Masculin' : 'Féminin' }}</dd>
+                            <dd class="mt-1 text-brand-ink">{{ match ($eleve->sexe) { 'M' => 'Masculin', 'F' => 'Féminin', default => '—' } }}</dd>
                         </div>
                         <div>
                             <dt class="text-xs uppercase tracking-wide text-gray-500">Téléphone</dt>

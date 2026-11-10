@@ -1,7 +1,8 @@
 /**
  * Prévisualisation + recadrage simple (pan/zoom) d'une photo d'élève avant envoi.
- * Rendu final carré (format standard pour une photo d'identité sur carte scolaire),
- * injecté dans l'input file du formulaire via DataTransfer avant soumission.
+ * Rendu final en hauteur, format 4:5 (photo d'identité : la tête entière tient
+ * dans le cadre sans avoir à dézoomer au-delà de la photo), injecté dans
+ * l'input file du formulaire via DataTransfer avant soumission.
  */
 export function initPhotoCrop(root) {
     const input = root.querySelector('[data-photo-input]');
@@ -13,9 +14,10 @@ export function initPhotoCrop(root) {
     if (!input || !canvas || !form) return;
 
     const ctx = canvas.getContext('2d');
-    const SIZE = 480;
-    canvas.width = SIZE;
-    canvas.height = SIZE;
+    const WIDTH = 384;
+    const HEIGHT = 480;
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
 
     let image = null;
     let scale = 1;
@@ -28,7 +30,7 @@ export function initPhotoCrop(root) {
 
     function draw() {
         if (!image) return;
-        ctx.clearRect(0, 0, SIZE, SIZE);
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
         const w = image.width * scale;
         const h = image.height * scale;
         ctx.drawImage(image, offsetX, offsetY, w, h);
@@ -37,8 +39,8 @@ export function initPhotoCrop(root) {
     function clampOffsets() {
         const w = image.width * scale;
         const h = image.height * scale;
-        offsetX = Math.min(0, Math.max(SIZE - w, offsetX));
-        offsetY = Math.min(0, Math.max(SIZE - h, offsetY));
+        offsetX = Math.min(0, Math.max(WIDTH - w, offsetX));
+        offsetY = Math.min(0, Math.max(HEIGHT - h, offsetY));
     }
 
     function loadImage(file) {
@@ -47,10 +49,11 @@ export function initPhotoCrop(root) {
             const img = new Image();
             img.onload = () => {
                 image = img;
-                minScale = Math.max(SIZE / img.width, SIZE / img.height);
+                // Zoom minimum : la photo couvre tout le cadre (jamais de bord vide).
+                minScale = Math.max(WIDTH / img.width, HEIGHT / img.height);
                 scale = minScale;
-                offsetX = (SIZE - img.width * scale) / 2;
-                offsetY = (SIZE - img.height * scale) / 2;
+                offsetX = (WIDTH - img.width * scale) / 2;
+                offsetY = (HEIGHT - img.height * scale) / 2;
                 canvas.classList.remove('hidden');
                 if (placeholder) placeholder.classList.add('hidden');
                 if (zoomRange) {
@@ -92,13 +95,13 @@ export function initPhotoCrop(root) {
     if (zoomRange) {
         zoomRange.addEventListener('input', () => {
             if (!image) return;
-            const centerX = SIZE / 2 - offsetX;
-            const centerY = SIZE / 2 - offsetY;
+            const centerX = WIDTH / 2 - offsetX;
+            const centerY = HEIGHT / 2 - offsetY;
             const ratio = centerX / (image.width * scale);
             const ratioY = centerY / (image.height * scale);
             scale = parseFloat(zoomRange.value);
-            offsetX = SIZE / 2 - ratio * image.width * scale;
-            offsetY = SIZE / 2 - ratioY * image.height * scale;
+            offsetX = WIDTH / 2 - ratio * image.width * scale;
+            offsetY = HEIGHT / 2 - ratioY * image.height * scale;
             clampOffsets();
             draw();
         });

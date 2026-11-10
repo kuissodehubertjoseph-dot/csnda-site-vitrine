@@ -66,16 +66,10 @@ class CardController extends Controller
     }
 
     /**
-     * Nombre de cartes regroupées par fichier PDF lors d'une impression par lot.
-     * Limite la mémoire utilisée par appel à Browsershot et garde des fichiers
-     * d'une taille raisonnable à manipuler/imprimer.
-     */
-    private const TAILLE_PAQUET_LOT = 25;
-
-    /**
-     * Génère deux PDF multi-pages par paquet — un pour les rectos, un pour les
-     * versos — plutôt qu'un fichier unique mêlant les deux faces : facilite
-     * l'impression recto/verso à la chaîne (un fichier par bac de la chargeuse).
+     * Génère deux PDF multi-pages pour tout le lot — un avec tous les rectos,
+     * un avec tous les versos — plutôt qu'un fichier unique mêlant les deux
+     * faces : facilite l'impression recto/verso à la chaîne (un fichier par
+     * bac de la chargeuse).
      */
     public function genererLot(Request $request): View|RedirectResponse
     {
@@ -98,26 +92,26 @@ class CardController extends Controller
         // La génération PDF (Chromium + encodage base64 des pages) est gourmande en
         // mémoire ; on l'augmente pour cette seule requête plutôt que globalement.
         ini_set('memory_limit', '1024M');
+        // Un seul PDF par face pour tout le lot : peut prendre plusieurs minutes
+        // pour une grande classe.
+        set_time_limit(0);
 
         $lot = Str::uuid()->toString();
 
         Storage::disk('local')->makeDirectory('exports');
 
-        $paquets = $eleves->chunk(self::TAILLE_PAQUET_LOT)->values();
-
-        foreach ($paquets as $index => $paquet) {
-            foreach (['recto', 'verso'] as $face) {
-                $html = view('cartes.lot-face', ['eleves' => $paquet, 'face' => $face])->render();
-                $pdf = $this->navigateurCarteLot($html)->pdf();
-                Storage::disk('local')->put("exports/{$lot}-{$index}-{$face}.pdf", $pdf);
-                unset($pdf);
-            }
+        foreach (['recto', 'verso'] as $face) {
+            $html = view('cartes.lot-face', ['eleves' => $eleves, 'face' => $face])->render();
+            // Écrit directement sur disque (save) plutôt que de récupérer le PDF
+            // en mémoire PHP : un lot complet peut peser plusieurs dizaines de Mo.
+            $this->navigateurCarteLot($html, $eleves->count())
+                ->save(Storage::disk('local')->path("exports/{$lot}-0-{$face}.pdf"));
+            unset($html);
         }
 
         return view('cartes.lot-resultat', [
             'lot' => $lot,
             'nombreEleves' => $eleves->count(),
-            'nombrePaquets' => $paquets->count(),
         ]);
     }
 
@@ -135,7 +129,7 @@ class CardController extends Controller
 
         return response(Storage::disk('local')->get($chemin), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="cartes-'.($paquet + 1)."-{$face}.pdf\"",
+            'Content-Disposition' => "attachment; filename=\"cartes-{$face}s.pdf\"",
         ]);
     }
 
@@ -157,9 +151,9 @@ class CardController extends Controller
     /**
      * Variante utilisée pour l'impression par lot : échelle réduite (toujours nette
      * à l'impression) pour limiter la mémoire et la taille des PDF multi-pages,
-     * et un délai plus long car chaque paquet peut contenir plusieurs dizaines de cartes.
+     * et un délai proportionnel au nombre de cartes (tout le lot tient dans un seul PDF).
      */
-    private function navigateurCarteLot(string $html): Browsershot
+    private function navigateurCarteLot(string $html, int $nombreCartes): Browsershot
     {
         return Browsershot::html($html)
             ->setNodeModulePath(base_path('node_modules'))
@@ -168,6 +162,6 @@ class CardController extends Controller
             ->paperSize(85.6, 55, 'mm')
             ->margins(0, 0, 0, 0)
             ->deviceScaleFactor(2)
-            ->timeout(180);
+            ->timeout(max(180, $nombreCartes * 4));
     }
 }

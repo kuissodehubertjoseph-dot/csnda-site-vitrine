@@ -12,6 +12,22 @@ class MultiEtablissementTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_les_etablissements_version_3_reprennent_les_parametres_de_la_version_2_sans_eleves(): void
+    {
+        foreach (['ucao', 'fde', 'egei', 'fsae'] as $slug) {
+            $version2 = Etablissement::where('slug', $slug.'-2')->firstOrFail();
+            $version3 = Etablissement::where('slug', $slug.'-3')->firstOrFail();
+            $attributsIgnores = array_flip(['id', 'slug', 'nom', 'created_at', 'updated_at']);
+
+            $this->assertSame(substr($version2->nom, 0, -1).'3', $version3->nom);
+            $this->assertSame(
+                array_diff_key($version2->getAttributes(), $attributsIgnores),
+                array_diff_key($version3->getAttributes(), $attributsIgnores)
+            );
+            $this->assertSame(0, Student::where('etablissement_id', $version3->id)->count());
+        }
+    }
+
     public function test_connexion_dediee_isole_les_eleves_par_etablissement(): void
     {
         $css = Etablissement::where('slug', 'css')->firstOrFail();
@@ -124,6 +140,24 @@ class MultiEtablissementTest extends TestCase
 
         $reponse->assertSessionHasErrors('email');
         $this->assertGuest();
+    }
+
+    public function test_un_compte_developpeur_peut_utiliser_les_memes_identifiants_sur_chaque_ecole(): void
+    {
+        $ucao = Etablissement::where('slug', 'ucao')->firstOrFail();
+        $developpeur = User::factory()->create([
+            'role' => User::ROLE_DEVELOPPEUR,
+            'password' => 'Motdepasse1',
+        ]);
+
+        $reponse = $this->post(route('ecoles.connexion', $ucao->slug), [
+            'email' => $developpeur->email,
+            'password' => 'Motdepasse1',
+        ]);
+
+        $reponse->assertRedirect(route('eleves.index'));
+        $this->assertAuthenticatedAs($developpeur);
+        $this->assertSame($ucao->id, session('etablissement_id'));
     }
 
     public function test_les_nouveaux_comptes_sont_rattaches_a_letablissement_actif(): void

@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\Etablissement;
 use App\Models\Student;
 use App\Models\User;
+use Database\Seeders\AdminUserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class RolesTest extends TestCase
@@ -136,19 +138,66 @@ class RolesTest extends TestCase
             'role' => User::ROLE_DEVELOPPEUR,
             'password' => 'Motdepasse1',
             'password_confirmation' => 'Motdepasse1',
-        ])->assertRedirect();
+        ])->assertSessionHasErrors('role');
 
-        $this->assertDatabaseHas('users', [
-            'email' => 'nouveaudev@test.bj',
-            'role' => User::ROLE_DEVELOPPEUR,
+        $this->assertDatabaseMissing('users', ['email' => 'nouveaudev@test.bj']);
+    }
+
+    public function test_le_seed_cree_un_compte_global_avec_les_identifiants_configures(): void
+    {
+        config([
+            'administration.email' => 'cortex-global@test.bj',
+            'administration.password' => 'Motdepasse1',
         ]);
+
+        app(AdminUserSeeder::class)->run();
+
+        $compte = User::where('email', 'cortex-global@test.bj')->firstOrFail();
+
+        $this->assertSame(User::ROLE_DEVELOPPEUR, $compte->role);
+        $this->assertNull($compte->etablissement_id);
+        $this->assertTrue(Hash::check('Motdepasse1', $compte->password));
+    }
+
+    public function test_le_seed_met_a_jour_le_compte_global_existant(): void
+    {
+        $compte = User::factory()->create([
+            'name' => 'Administration Cortex Bénin TV',
+            'email' => 'ancien-global@test.bj',
+            'role' => User::ROLE_DEVELOPPEUR,
+            'etablissement_id' => null,
+        ]);
+
+        config([
+            'administration.email' => 'nouveau-global@test.bj',
+            'administration.password' => 'Motdepasse2',
+        ]);
+
+        app(AdminUserSeeder::class)->run();
+
+        $compte->refresh();
+        $this->assertSame('nouveau-global@test.bj', $compte->email);
+        $this->assertSame(User::ROLE_DEVELOPPEUR, $compte->role);
+        $this->assertNull($compte->etablissement_id);
+        $this->assertTrue(Hash::check('Motdepasse2', $compte->password));
+        $this->assertDatabaseMissing('users', ['email' => 'ancien-global@test.bj']);
+    }
+
+    public function test_un_compte_ne_peut_pas_etre_promu_developpeur_depuis_les_acces(): void
+    {
+        $this->agir($this->dg)
+            ->patch("/acces/{$this->secretaire->id}", ['role' => User::ROLE_DEVELOPPEUR])
+            ->assertSessionHasErrors('role');
+
+        $this->assertSame(User::ROLE_SECRETAIRE, $this->secretaire->fresh()->role);
+        $this->assertSame($this->etablissement->id, $this->secretaire->fresh()->etablissement_id);
     }
 
     public function test_le_dg_ne_peut_pas_modifier_un_compte_developpeur(): void
     {
         $this->agir($this->dg)
             ->patch("/acces/{$this->developpeur->id}", ['role' => User::ROLE_SECRETAIRE])
-            ->assertSessionHasErrors('role');
+            ->assertNotFound();
 
         $this->assertSame(User::ROLE_DEVELOPPEUR, $this->developpeur->fresh()->role);
     }
@@ -157,7 +206,7 @@ class RolesTest extends TestCase
     {
         $this->agir($this->dg)
             ->delete("/acces/{$this->developpeur->id}")
-            ->assertSessionHasErrors('acces');
+            ->assertNotFound();
 
         $this->assertDatabaseHas('users', ['id' => $this->developpeur->id]);
     }
@@ -170,12 +219,9 @@ class RolesTest extends TestCase
             'role' => User::ROLE_DEVELOPPEUR,
             'password' => 'Motdepasse1',
             'password_confirmation' => 'Motdepasse1',
-        ])->assertRedirect();
+        ])->assertSessionHasErrors('role');
 
-        $this->assertDatabaseHas('users', [
-            'email' => 'dev2@test.bj',
-            'role' => User::ROLE_DEVELOPPEUR,
-        ]);
+        $this->assertDatabaseMissing('users', ['email' => 'dev2@test.bj']);
     }
 
     public function test_le_dg_accede_a_tout(): void
@@ -199,6 +245,15 @@ class RolesTest extends TestCase
             'email' => 'nouvelle@test.bj',
             'role' => User::ROLE_SECRETAIRE,
         ]);
+    }
+
+    public function test_la_page_des_acces_ne_revele_pas_les_comptes_ni_le_role_developpeur(): void
+    {
+        $reponse = $this->agir($this->dg)->get('/acces');
+
+        $reponse->assertOk();
+        $reponse->assertDontSee($this->developpeur->email);
+        $reponse->assertDontSee('Développeur');
     }
 
     public function test_le_dernier_dg_ne_peut_pas_etre_retrograde(): void

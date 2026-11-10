@@ -1,10 +1,11 @@
 {{-- Contenu du recto pour un élève donné. Attend $eleve et, en boucle, $logoDataUri. --}}
 @php($logo = $logoDataUri ?? \App\Support\Ecole::logoDataUri())
-@if (in_array(config('ecole.slug'), ['ucao', 'egei'], true))
+@if (in_array(config('ecole.slug'), ['ucao', 'egei', 'fsae', 'fde', 'ucao-2', 'egei-2', 'fsae-2', 'fde-2', 'ucao-3', 'egei-3', 'fsae-3', 'fde-3'], true))
     @php($dateExpiration = match (true) {
         str_starts_with($eleve->classe, 'Licence 1') => '31/07/2029',
         str_starts_with($eleve->classe, 'Licence 2') => '31/07/2028',
         str_starts_with($eleve->classe, 'Licence 3') => '31/07/2027',
+        str_starts_with($eleve->classe, 'Master') => '31/07/2028',
         default => null,
     })
     @php($anneeAffichee = $dateExpiration ? '2026-'.substr($dateExpiration, -4) : $eleve->annee_scolaire)
@@ -27,10 +28,10 @@
     </div>
 
     <div class="ucao-corps">
-        @php($neLeAffiche = ($eleve->date_naissance?->format('d/m/Y') ?? '—').' à '.$eleve->lieu_naissance)
-        @php($cycleFiliereAffiche = preg_replace('/^Licence [123]\b/u', 'Licence', $eleve->classe))
+        @php($neLeAffiche = ($eleve->date_naissance?->format('d/m/Y') ?? '—').' '.\App\Support\LieuNaissance::libelle($eleve->lieu_naissance))
+        @php($cycleFiliereAffiche = preg_replace('/\s*\(([^)]*)\)/u', ' - $1', preg_replace('/^(Licence|Master) \d\b/u', '$1', $eleve->classe)))
         <div class="ucao-champs @if ($dateExpiration) ucao-champs--compact @endif">
-            <div class="ucao-champ"><span class="ucao-etiquette">Nom :</span><span class="ucao-valeur">{{ mb_strtoupper($eleve->nom) }}</span></div>
+            <div class="ucao-champ"><span class="ucao-etiquette">Nom :</span><span class="ucao-valeur">{{ $eleve->nom }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Prénoms :</span><span class="ucao-valeur">{{ $eleve->prenoms }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Né(e) le :</span><span class="ucao-valeur">{{ $neLeAffiche }}</span></div>
             <div class="ucao-champ"><span class="ucao-etiquette">Cycle-Filière :</span><span class="ucao-valeur">{{ $cycleFiliereAffiche }}</span></div>
@@ -86,18 +87,15 @@
 <div class="titre-recto">CARTE D'IDENTITÉ SCOLAIRE</div>
 
 <div class="corps-recto">
-    @php($nomAffiche = mb_strtoupper($eleve->nom))
-    @php($neLeAffiche = ($eleve->date_naissance?->format('d/m/Y') ?? '—').' à '.$eleve->lieu_naissance)
+    @php($nomAffiche = $eleve->nom)
+    @php($neLeAffiche = ($eleve->date_naissance?->format('d/m/Y') ?? '—').' '.\App\Support\LieuNaissance::libelle($eleve->lieu_naissance))
     <div class="champs-recto">
         <div class="champ"><span class="etiquette-champ">Nom :</span><span class="valeur-champ">{{ $nomAffiche }}</span></div>
         <div class="champ"><span class="etiquette-champ">Prénoms :</span><span class="valeur-champ">{{ $eleve->prenoms }}</span></div>
         <div class="champ"><span class="etiquette-champ">Né (e) le :</span><span class="valeur-champ">{{ $neLeAffiche }}</span></div>
         <div class="champ"><span class="etiquette-champ">Sexe :</span><span class="valeur-champ">{{ $eleve->sexe }}</span></div>
-        <div class="champ"><span class="etiquette-champ">Classe :</span><span class="valeur-champ">{{ $eleve->classe }}</span></div>
+        <div class="champ"><span class="etiquette-champ">Classe :</span><span class="valeur-champ">{{ \App\Support\Classe::html($eleve->classe) }}</span></div>
         <div class="champ"><span class="etiquette-champ">N° Matricule :</span><span class="valeur-champ">{{ $eleve->matricule }}</span></div>
-        @if (config('ecole.slug') === 'jean-baptiste')
-            <div class="champ"><span class="etiquette-champ">Adr/Tél.Parent :</span><span class="valeur-champ">{{ $eleve->telephone ?: '—' }}</span></div>
-        @endif
     </div>
 
     @php($signatureEleve = $eleve->signature_data_uri)

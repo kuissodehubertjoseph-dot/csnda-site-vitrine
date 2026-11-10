@@ -67,7 +67,7 @@
                     align-items: center;
                     justify-content: center;
                     gap: 1rem;
-                    background: linear-gradient(135deg, {{ in_array(config('ecole.slug'), ['ucao', 'egei'], true) ? '#E85D9C 0%, #C43B7A 100%' : '#5EB3E4 0%, #3E93C4 100%' }});
+                    background: linear-gradient(135deg, {{ in_array(config('ecole.slug'), ['ucao', 'egei', 'fsae', 'fde', 'ucao-2', 'egei-2', 'fsae-2', 'fde-2', 'ucao-3', 'egei-3', 'fsae-3', 'fde-3'], true) ? '#E85D9C 0%, #C43B7A 100%' : '#5EB3E4 0%, #3E93C4 100%' }});
                     transition: opacity 0.5s ease, visibility 0.5s ease;
                 }
 
@@ -129,6 +129,16 @@
                         'images/connexion/jean-baptiste-3.jpg',
                     ],
                     'ucao' => [
+                        'images/connexion/ucao-1.jpg',
+                        'images/connexion/ucao-2.jpg',
+                        'images/connexion/ucao-3.jpg',
+                    ],
+                    'ucao-2' => [
+                        'images/connexion/ucao-1.jpg',
+                        'images/connexion/ucao-2.jpg',
+                        'images/connexion/ucao-3.jpg',
+                    ],
+                    'ucao-3' => [
                         'images/connexion/ucao-1.jpg',
                         'images/connexion/ucao-2.jpg',
                         'images/connexion/ucao-3.jpg',

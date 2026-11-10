@@ -47,6 +47,19 @@ APP_ENV=production, APP_DEBUG=false et les identifiants MySQL (DB_HOST,
 DB_DATABASE, DB_USERNAME) sont déjà renseignés. Ne collez jamais le mot
 de passe dans une conversation ou un fichier suivi par git.
 
+Compte global de toutes les écoles :
+  - CORTEX_ADMIN_EMAIL=cortexbenin@gmail.com
+  - CORTEX_ADMIN_PASSWORD=<mot de passe choisi>
+
+Ces variables sont à renseigner uniquement dans le .env de l'application,
+jamais dans un fichier suivi par git. Pour créer ou mettre à jour le compte,
+lancer une seule fois depuis laravel_app/ :
+    php artisan db:seed --class=AdminUserSeeder
+
+Le compte reçoit le rôle développeur, qui peut ouvrir toutes les écoles.
+Ne pas communiquer son mot de passe et le remplacer par une valeur sûre
+si celui-ci a été partagé.
+
 ÉTAPE 1 — Connexion FileZilla
 ------------------------------------------
 1. Ouvrir FileZilla.

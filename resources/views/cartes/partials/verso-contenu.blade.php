@@ -1,4 +1,4 @@
-@if (in_array(config('ecole.slug'), ['ucao', 'egei'], true))
+@if (in_array(config('ecole.slug'), ['ucao', 'egei', 'fsae', 'fde', 'ucao-2', 'egei-2', 'fsae-2', 'fde-2', 'ucao-3', 'egei-3', 'fsae-3', 'fde-3'], true))
     {{-- Verso UCAO : reproduction exacte du cartouche officiel fourni par
     l'établissement — fond blanc uni (pas de dégradé, la carte physique n'est
     pas en PVC couleur des deux côtés), texte centré uniquement. --}}

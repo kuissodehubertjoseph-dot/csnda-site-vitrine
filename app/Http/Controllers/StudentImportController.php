@@ -49,13 +49,34 @@ class StudentImportController extends Controller
         $classeDetectee = $this->detecterChamp($texte, 'classe');
         $anneeDetectee = $this->detecterChamp($texte, 'année scolaire');
 
-        $classe = $request->string('classe')->trim()->toString() ?: $classeDetectee;
+        $classe = $request->string('classe')->trim()->toString()
+            ?: $this->classeOfficielle($classeDetectee)
+            ?: $this->classeDepuisFiliere($texte);
         $anneeScolaire = $request->string('annee_scolaire')->trim()->toString() ?: $anneeDetectee;
 
-        return view('eleves.import.apercu', [
+        // Conservé en session pour que l'aperçu survive à un rechargement ou
+        // à un retour après une erreur de validation à l'enregistrement.
+        $request->session()->put('import_apercu', [
             'lignes' => $lignes,
             'classe' => $classe,
             'anneeScolaire' => $anneeScolaire,
+        ]);
+
+        return redirect()->route('eleves.import.apercu.afficher');
+    }
+
+    public function afficherApercu(Request $request): View|RedirectResponse
+    {
+        $apercu = $request->session()->get('import_apercu');
+
+        if (! $apercu) {
+            return redirect()->route('eleves.import.form');
+        }
+
+        return view('eleves.import.apercu', [
+            'lignes' => $apercu['lignes'],
+            'classe' => $apercu['classe'],
+            'anneeScolaire' => $apercu['anneeScolaire'],
             'classes' => config('ecole.classes'),
         ]);
     }
@@ -66,7 +87,7 @@ class StudentImportController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'classe' => ['required', 'string', 'max:50'],
+            'classe' => ['required', 'string', \Illuminate\Validation\Rule::in(config('ecole.classes') ?? [])],
             'annee_scolaire' => ['required', 'string', 'max:20'],
             'lignes' => ['required', 'array', 'min:1'],
             'lignes.*.inclure' => ['nullable', 'boolean'],
@@ -77,6 +98,12 @@ class StudentImportController extends Controller
             'lignes.*.date_naissance' => ['nullable', 'date'],
             'lignes.*.lieu_naissance' => ['nullable', 'string', 'max:100'],
             'lignes.*.telephone' => ['nullable', 'string', 'max:30'],
+        ], [
+            'classe.required' => 'Merci de renseigner la classe.',
+            'classe.in' => 'La classe « :input » ne fait pas partie de la liste des classes de l\'établissement : choisissez-la dans la liste proposée.',
+            'lignes.*.*.max' => 'Ligne :position : un champ est trop long (:max caractères maximum).',
+            'lignes.*.*.date' => 'Ligne :position : date de naissance invalide.',
+            'lignes.*.*.required_with' => 'Ligne :position : le nom est obligatoire.',
         ]);
 
         $cree = 0;
@@ -129,23 +156,156 @@ class StudentImportController extends Controller
         }
         $message .= ' Pensez à compléter les fiches incomplètes (photo, téléphone...).';
 
+        $request->session()->forget('import_apercu');
+
         return redirect()
             ->route('eleves.index', ['classe' => $data['classe']])
             ->with('succes', $message);
     }
 
     /**
-     * Lit "Classe : 4e A" ou "Année scolaire : 2025-2026" dans l'en-tête du PDF.
+     * Lit "Classe : 4e A" ou "Année scolaire : 2025-2026" dans l'en-tête du
+     * PDF. Le libellé peut être suivi de mots supplémentaires avant le
+     * ":" (ex. "Liste des élèves de la classe de : 1ère-B"), d'où le
+     * "(?:\s+\S+){0,3}" toléré entre l'étiquette et le ":".
      */
     private function detecterChamp(string $texte, string $etiquette): string
     {
         $etiquetteRegex = preg_quote($etiquette, '/');
 
-        if (preg_match('/'.$etiquetteRegex.'\s*:\s*([^\r\n]+)/iu', $texte, $m)) {
+        if (preg_match('/'.$etiquetteRegex.'(?:\s+\S+){0,3}?\s*:\s*([^\r\n]+)/iu', $texte, $m)) {
             return trim($m[1]);
         }
 
         return '';
+    }
+
+    /**
+     * Ramène la classe lue dans le PDF ("6 ème-E2", "Terminale-B", "2nd G-2")
+     * à son libellé officiel dans la liste de l'établissement ("6ème-E2",
+     * "TleB", "2nde-G2"). Sans correspondance sûre, renvoie le texte lu.
+     */
+    private function classeOfficielle(string $classeLue): string
+    {
+        if ($classeLue === '') {
+            return '';
+        }
+
+        $cle = fn (string $c) => preg_replace(
+            ['/^terminale|^tle/', '/^(\d)(eme|ere|er|nde|nd|e)/'],
+            ['t', '$1'],
+            preg_replace('/[^a-z0-9]/', '', strtolower(\Illuminate\Support\Str::ascii($c)))
+        );
+
+        $cleLue = $cle($classeLue);
+        $candidats = [];
+
+        foreach (config('ecole.classes') ?? [] as $officielle) {
+            $cleOfficielle = $cle($officielle);
+
+            if ($cleOfficielle === $cleLue) {
+                return $officielle;
+            }
+
+            if (str_starts_with($cleLue, $cleOfficielle) || str_starts_with($cleOfficielle, $cleLue)) {
+                $candidats[] = $officielle;
+            }
+        }
+
+        return count($candidats) === 1 ? $candidats[0] : $classeLue;
+    }
+
+    /**
+     * Filières universitaires (UCAO, EGEI, FSAE, FDE) : intitulé complet tel
+     * qu'il apparaît dans l'en-tête des listes officielles => abréviation
+     * utilisée dans les classes de l'établissement ("Licence 1 (TL)").
+     */
+    private const ABREVIATIONS_FILIERES = [
+        'action commerciale et force de vente' => 'ACFV',
+        'assurance' => 'ASSU',
+        'audit et controle de gestion' => 'ACG',
+        "banque et finance d'entreprise" => 'BFE',
+        'commerce' => 'COM',
+        'communication et action publicitaire' => 'CAP',
+        'informatique de gestion' => 'IG',
+        'management des ressources humaines' => 'MRH',
+        'transport et logistique' => 'TL',
+        'commerce international' => 'CI',
+        'marketing et communication' => 'MC',
+        'audit et securite des systemes et reseaux informatiques' => 'ASSRI',
+        'electronique' => 'ELN',
+        'electrotechnique' => 'ELT',
+        'genie telecoms et tic' => 'GTTIC',
+        'informatique industrielle et maintenance' => 'IIM',
+        'maintenance biomedicale et equipements hospitaliers' => 'MBEH',
+        'systeme informatique et logiciel' => 'SIL',
+        'telecommunications et reseaux informatiques' => 'TRI',
+        'agronomie' => 'AGRO',
+        'production et gestion des ressources animales' => 'PGRA',
+        "gestion de l'environnement et amenagement du territoire" => 'GEAT',
+        'qualite hygiene securite environnement' => 'QHSE',
+        'tourisme' => 'TOUR',
+        'droit' => 'DRT',
+        'economie' => 'ECO',
+        'econometrie et statistique appliquee' => 'ESA',
+        'droit prive fondamental' => 'DPRF',
+        'droit public fondamental' => 'DPUF',
+    ];
+
+    /**
+     * Listes universitaires sans ligne "Classe :" (ex. UCAO) : l'en-tête
+     * donne la filière ("Filière : TRANSPORT ET LOGISTIQUE") et le niveau
+     * sur une ligne à part ("LICENCE 1"), qu'on recompose en "Licence 1 (TL)"
+     * lorsque cette classe existe dans l'établissement.
+     */
+    private function classeDepuisFiliere(string $texte): string
+    {
+        $filiere = $this->detecterChamp($texte, 'filière');
+
+        if ($filiere === '' || ! preg_match('/^\s*(licence|master)\s*(\d)\s*$/imu', $texte, $mNiveau)) {
+            return '';
+        }
+
+        $cle = mb_strtolower(\Illuminate\Support\Str::ascii($filiere), 'UTF-8');
+        $cle = trim(preg_replace('/\s+/u', ' ', $cle) ?? '');
+        $abreviation = self::ABREVIATIONS_FILIERES[$cle] ?? null;
+
+        if ($abreviation === null) {
+            return '';
+        }
+
+        $cycle = ucfirst(strtolower($mNiveau[1]));
+        $classesConnues = config('ecole.classes') ?? [];
+
+        // Master : "Master 1 (X)" ou, à l'EGEI, "Master (X)" sans numéro.
+        foreach ([$cycle.' '.$mNiveau[2].' ('.$abreviation.')', $cycle.' ('.$abreviation.')'] as $classe) {
+            if (in_array($classe, $classesConnues, true)) {
+                return $classe;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Ligne d'en-tête, de pied de page ou de titre à ignorer. Aucun format
+     * d'élève supporté ne produit de ligne sans chiffre (matricule/date).
+     */
+    private function estLigneDeBruit(string $ligne): bool
+    {
+        if (! preg_match('/\d/u', $ligne)) {
+            return true;
+        }
+
+        return $this->estEnTeteOuPiedDePage($ligne);
+    }
+
+    private function estEnTeteOuPiedDePage(string $ligne): bool
+    {
+        return preg_match(
+            '/^(année scolaire|établissement|filière|classe|n°|no[\.\s°]|numéro|matricule|nom\b|naissance|lieu de naissance|date de|effectif|liste des|république|realized by|page\s*\d+\s*\/\s*\d+|édité (le|par)|(licence|master)\s*\d\s*$)/iu',
+            $ligne
+        ) === 1 || str_contains($ligne, '©');
     }
 
     /**
@@ -179,11 +339,17 @@ class StudentImportController extends Controller
                 continue;
             }
 
-            // Ignore les lignes d'en-tête / pied de page évidentes (elles ne
-            // contiennent de toute façon jamais le motif sexe+date+lieu ci-dessous).
-            // Note : pas de \b après "n°", le caractère "°" n'étant pas un
-            // caractère de mot, la limite ne se déclencherait jamais.
-            if (preg_match('/^(année scolaire|établissement|filière|classe|n°|no\.?|matricule|nom\b|effectif|liste des|république|realized by)/iu', $ligne)) {
+            if ($this->estLigneDeBruit($ligne)) {
+                continue;
+            }
+
+            // Export UCAO "Matricule Nom Date Lieu Pays Nationalité Téléphone",
+            // reconnaissable à sa date au format ISO (2007-05-20).
+            $ligneMatriculeDateIso = $this->extraireLigneMatriculeDateIso($ligneOriginale);
+
+            if ($ligneMatriculeDateIso !== null) {
+                $resultat[] = $ligneMatriculeDateIso;
+
                 continue;
             }
 
@@ -203,6 +369,14 @@ class StudentImportController extends Controller
 
             if ($ligneEnrichie !== null) {
                 $resultat[] = $ligneEnrichie;
+
+                continue;
+            }
+
+            $ligneCollee = $this->extraireLigneNomOrdreSexeStatutMatriculeDate($ligneOriginale);
+
+            if ($ligneCollee !== null) {
+                $resultat[] = $ligneCollee;
 
                 continue;
             }
@@ -244,7 +418,23 @@ class StudentImportController extends Controller
                 continue;
             }
 
-            if (preg_match('/^(année scolaire|établissement|filière|classe|n°|no\.?|matricule|nom\b|effectif|liste des|république|realized by)/iu', $ligneNettoyee)) {
+            // Export UCAO dont les prénoms ou le lieu de naissance débordent
+            // ("GBELODE" / "FRANCINE" / "2008-05-01GODOMEY...", ou "...
+            // République Démocratique" / "du Congo" / "Congo[TAB]+229 ...") :
+            // la ligne sans chiffre du milieu passerait pour du bruit et
+            // couperait l'élève en deux. Tant que la ligne en cours n'a pas
+            // atteint son téléphone (dernière colonne), on l'y recolle.
+            if ($courante !== null
+                && ! preg_match('/\d/u', $ligneNettoyee)
+                && ! $this->estEnTeteOuPiedDePage($ligneNettoyee)
+                && preg_match('/^\d{6,15}\s+\p{L}/u', trim($courante))
+                && ! preg_match('/\+?\d[\d\s]{6,}$/u', trim($courante))) {
+                $courante = rtrim($courante).' '.ltrim($ligneBrute);
+
+                continue;
+            }
+
+            if ($this->estLigneDeBruit($ligneNettoyee)) {
                 if ($courante !== null) {
                     $resultat[] = $courante;
                     $courante = null;
@@ -253,7 +443,9 @@ class StudentImportController extends Controller
                 continue;
             }
 
-            $debuteNouvelElement = preg_match('/^\d{1,3}\s+\d{4,15}\b/u', $ligneNettoyee) === 1;
+            $debuteNouvelElement = preg_match('/^\d{1,3}\s+\d{4,15}\b/u', $ligneNettoyee) === 1
+                || preg_match('/^\d{8,15}\s+\p{L}/u', $ligneNettoyee) === 1
+                || $this->extraireLigneNomOrdreSexeStatutMatriculeDate($ligneNettoyee) !== null;
 
             if ($debuteNouvelElement || $courante === null) {
                 if ($courante !== null) {
@@ -423,6 +615,91 @@ class StudentImportController extends Controller
     }
 
     /**
+     * Pays les plus fréquents dans les listes, pour les détacher du lieu de
+     * naissance quand la tabulation qui les sépare a disparu.
+     */
+    private const PAYS = [
+        'Bénin', 'Togo', 'Nigeria', 'Niger', 'Burkina Faso', "Côte d'Ivoire",
+        'Ghana', 'Gabon', 'Cameroun', 'Sénégal', 'Mali', 'Tchad', 'Guinée',
+        'République Démocratique du Congo', 'Congo', 'France',
+    ];
+
+    /**
+     * Format UCAO (liste par filière) : "Matricule NOM Prénom(s)[TAB]
+     * AAAA-MM-JJLieu[TAB]Pays[TAB]Nationalité[TAB]Téléphone", sans numéro
+     * d'ordre. La date au format ISO, toujours présente et collée au lieu,
+     * sert d'ancre. Comme dans les autres exports, les tabulations entre
+     * lieu, pays et nationalité disparaissent par endroits ("AHOLOUYEME
+     * Bénin[TAB]Bénin") : le lieu est la première colonne après la date,
+     * débarrassée des noms de pays qui lui restent collés en fin.
+     *
+     * @return array{matricule: string, nom: string, prenoms: string, sexe: string, date_naissance: string, lieu_naissance: string, telephone: string}|null
+     */
+    private function extraireLigneMatriculeDateIso(string $ligneBrute): ?array
+    {
+        if (! preg_match(
+            '/^(?<matricule>\d{6,15})\s+(?<nomPrenoms>\D+?)\s*(?<annee>\d{4})-(?<mois>\d{2})-(?<jour>\d{2})(?<reste>.*)$/u',
+            trim($ligneBrute),
+            $m
+        )) {
+            return null;
+        }
+
+        $reste = $m['reste'];
+        $telephone = '';
+
+        if (preg_match('/\s*(?<telephone>\+?\d[\d\s]{6,})$/u', $reste, $mTel)) {
+            $telephone = trim($mTel['telephone']);
+            $reste = substr($reste, 0, -strlen($mTel[0]));
+        }
+
+        $colonnes = array_values(array_filter(
+            array_map('trim', explode("\t", $reste)),
+            fn ($colonne) => $colonne !== ''
+        ));
+
+        $lieu = $colonnes[0] ?? '';
+        $pays = array_merge(array_slice($colonnes, 1), self::PAYS);
+
+        do {
+            $avant = $lieu;
+
+            foreach ($pays as $unPays) {
+                if (mb_strlen($lieu) > mb_strlen($unPays)
+                    // Pays séparé par un espace, ou collé ("AdjibameyBénin").
+                    && (preg_match('/\s'.preg_quote($unPays, '/').'$/iu', $lieu)
+                        || preg_match('/(?<=\p{Ll})'.preg_quote($unPays, '/').'$/u', $lieu))) {
+                    $lieu = trim(mb_substr($lieu, 0, mb_strlen($lieu) - mb_strlen($unPays)));
+                }
+            }
+        } while ($lieu !== $avant);
+
+        $nomPrenoms = trim(preg_replace('/\s+/u', ' ', $m['nomPrenoms']) ?? '');
+        [$nom, $prenoms] = $this->separerNomPrenoms($nomPrenoms);
+
+        // Nom et prénoms entièrement en majuscules : premier mot comme nom,
+        // à vérifier à l'aperçu.
+        if ($prenoms === '' && str_contains($nom, ' ')) {
+            [$nom, $prenoms] = explode(' ', $nom, 2);
+            $prenoms = mb_convert_case(mb_strtolower($prenoms, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+        }
+
+        if ($nom === '') {
+            return null;
+        }
+
+        return [
+            'matricule' => $m['matricule'],
+            'nom' => $nom,
+            'prenoms' => $prenoms,
+            'sexe' => '',
+            'date_naissance' => sprintf('%04d-%02d-%02d', (int) $m['annee'], (int) $m['mois'], (int) $m['jour']),
+            'lieu_naissance' => $lieu !== '' ? $this->normaliserLieu($lieu) : '',
+            'telephone' => $telephone,
+        ];
+    }
+
+    /**
      * Sépare un bloc "Prénom(s) Lieu" glué (tabulation perdue à la mise en
      * page) en isolant le dernier mot comme lieu de naissance : heuristique
      * raisonnable pour les listes béninoises (le lieu suit toujours les
@@ -442,6 +719,59 @@ class StudentImportController extends Controller
         $lieu = array_pop($mots);
 
         return [implode(' ', $mots), $lieu];
+    }
+
+    /**
+     * Tente le format "NOM Prénoms" + N° + Sexe + Statut + Matricule + Date +
+     * Lieu, entièrement collés sans espace ni tabulation (ex. export "Collège
+     * Catholique Saint Jean-Baptiste") : contrairement aux autres formats, le
+     * flux texte du PDF ne conserve ici aucun séparateur entre colonnes — une
+     * ligne ressemble à "ADANVEHINTO Augustin1MP20602828/05/2010Cotonou". Le
+     * sexe (M/F) suivi de la lettre de statut (P/R/N...) sert d'ancre fixe
+     * entre le numéro d'ordre et le matricule ; les barres obliques de la
+     * date bornent ensuite, via un matricule capturé de façon paresseuse, la
+     * fin du matricule (longueur variable selon l'établissement) du jour de
+     * naissance qui le suit immédiatement.
+     *
+     * @return array{matricule: string, nom: string, prenoms: string, sexe: string, date_naissance: string, lieu_naissance: string, telephone: string}|null
+     */
+    private function estParticule(string $mot): bool
+    {
+        return preg_match("/^(de|da|do|dos|du|des|del|della|le|la|van|von|d')$/iu", $mot) === 1;
+    }
+
+    private function extraireLigneNomOrdreSexeStatutMatriculeDate(string $ligne): ?array
+    {
+        if (! preg_match(
+            '/^(?<nomPrenoms>\D+?)(?<ordre>\d{1,3})(?<sexe>[MF])(?<statut>[A-Z])(?<matricule>\d{2,15}?)(?<jour>\d{1,2})\/(?<mois>\d{1,2})\/(?<annee>\d{4})(?<lieu>.*)$/u',
+            $ligne,
+            $m
+        )) {
+            return null;
+        }
+
+        [$nom, $prenoms] = $this->separerNomPrenoms(trim($m['nomPrenoms']));
+
+        // Nom et prénoms saisis entièrement en majuscules ("DEGBEOVI JOSE
+        // ANTOINE") : on prend le premier mot comme nom, à vérifier à l'aperçu.
+        if ($prenoms === '' && str_contains($nom, ' ')) {
+            [$nom, $prenoms] = explode(' ', $nom, 2);
+            $prenoms = mb_convert_case(mb_strtolower($prenoms, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+        }
+
+        if ($nom === '' || $m['matricule'] === '') {
+            return null;
+        }
+
+        return [
+            'matricule' => $m['matricule'],
+            'nom' => $nom,
+            'prenoms' => $prenoms,
+            'sexe' => $m['sexe'],
+            'date_naissance' => sprintf('%04d-%02d-%02d', (int) $m['annee'], (int) $m['mois'], (int) $m['jour']),
+            'lieu_naissance' => $this->normaliserLieu(trim($m['lieu'])),
+            'telephone' => '',
+        ];
     }
 
     /**
@@ -503,6 +833,12 @@ class StudentImportController extends Controller
 
         $nomMots = [];
         $i = 0;
+
+        // Particule en tête ("De SOUZA", "Do REGO") : fait partie du nom.
+        if (count($mots) > 1 && $this->estParticule($mots[0]) && $mots[1] === mb_strtoupper($mots[1], 'UTF-8')) {
+            $nomMots[] = $mots[0];
+            $i = 1;
+        }
         while ($i < count($mots) && $mots[$i] === mb_strtoupper($mots[$i], 'UTF-8') && preg_match('/\p{L}/u', $mots[$i])) {
             $nomMots[] = $mots[$i];
             $i++;

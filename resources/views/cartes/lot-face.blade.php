@@ -20,7 +20,7 @@
 <body class="ecole-{{ config('ecole.slug') }}">
     {{-- Fichier dédié à une seule face (recto ou verso) : une carte par page,
     format CR80. Voir CardController::genererLot(), qui génère un PDF recto et
-    un PDF verso séparés par paquet, plutôt qu'un fichier mêlant les deux. --}}
+    un PDF verso séparés pour tout le lot, plutôt qu'un fichier mêlant les deux. --}}
     @if ($face === 'verso')
         @foreach ($eleves as $eleve)
             <div class="page carte carte-verso">

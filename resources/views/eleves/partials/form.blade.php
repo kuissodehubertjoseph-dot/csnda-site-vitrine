@@ -7,7 +7,7 @@
     <div class="lg:col-span-1" data-photo-crop>
         <label class="block text-sm font-medium text-gray-700 mb-2">Photo de l'élève</label>
 
-        <div class="relative w-full aspect-square rounded-lg border-2 border-dashed border-brand-green bg-gray-50 overflow-hidden flex items-center justify-center">
+        <div class="relative w-full aspect-[4/5] rounded-lg border-2 border-dashed border-brand-green bg-gray-50 overflow-hidden flex items-center justify-center">
             <canvas data-photo-canvas class="hidden w-full h-full cursor-move"></canvas>
 
             <div data-photo-placeholder class="text-center p-4">
@@ -65,22 +65,25 @@
             <x-input-error :messages="$errors->get('lieu_naissance')" class="mt-1" />
         </div>
 
-        <div>
-            <x-input-label for="sexe" value="Sexe" />
-            <select id="sexe" name="sexe" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-sky focus:ring-brand-sky" required>
-                <option value="">-- Sélectionner --</option>
-                <option value="M" @selected(old('sexe', $eleve?->sexe) === 'M')>Masculin</option>
-                <option value="F" @selected(old('sexe', $eleve?->sexe) === 'F')>Féminin</option>
-            </select>
-            <x-input-error :messages="$errors->get('sexe')" class="mt-1" />
-        </div>
+        {{-- Le sexe n'apparaît pas sur la carte UCAO/EGEI : champ retiré pour ces écoles. --}}
+        @unless (in_array(config('ecole.slug'), ['ucao', 'egei', 'fsae', 'fde', 'ucao-2', 'egei-2', 'fsae-2', 'fde-2', 'ucao-3', 'egei-3', 'fsae-3', 'fde-3'], true))
+            <div>
+                <x-input-label for="sexe" value="Sexe" />
+                <select id="sexe" name="sexe" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-sky focus:ring-brand-sky">
+                    <option value="">-- Sélectionner --</option>
+                    <option value="M" @selected(old('sexe', $eleve?->sexe) === 'M')>Masculin</option>
+                    <option value="F" @selected(old('sexe', $eleve?->sexe) === 'F')>Féminin</option>
+                </select>
+                <x-input-error :messages="$errors->get('sexe')" class="mt-1" />
+            </div>
+        @endunless
 
         <div>
             <x-input-label for="classe" value="Classe" />
             <select id="classe" name="classe" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-sky focus:ring-brand-sky" required>
                 <option value="">-- Sélectionner --</option>
                 @foreach ($classes as $classe)
-                    <option value="{{ $classe }}" @selected(old('classe', $eleve?->classe) === $classe)>{{ $classe }}</option>
+                    <option value="{{ $classe }}" @selected(old('classe', $eleve?->classe) === $classe)>{{ \App\Support\Classe::texte($classe) }}</option>
                 @endforeach
             </select>
             <x-input-error :messages="$errors->get('classe')" class="mt-1" />

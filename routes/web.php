@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/eleves/import', [StudentImportController::class, 'create'])->name('eleves.import.form');
     Route::post('/eleves/import/apercu', [StudentImportController::class, 'apercu'])->name('eleves.import.apercu');
+    Route::get('/eleves/import/apercu', [StudentImportController::class, 'afficherApercu'])->name('eleves.import.apercu.afficher');
     Route::post('/eleves/import', [StudentImportController::class, 'store'])->name('eleves.import.store');
 
     Route::delete('/eleves-tout', [StudentController::class, 'destroyTout'])->name('eleves.destroyTout');

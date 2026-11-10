@@ -16,6 +16,17 @@
                 enregistrées.
             </div>
 
+            @if ($errors->any())
+                <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm">
+                    <strong>L'enregistrement a été refusé :</strong>
+                    <ul class="list-disc ml-5 mt-1">
+                        @foreach ($errors->all() as $erreur)
+                            <li>{{ $erreur }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('eleves.import.store') }}">
                 @csrf
 
@@ -61,10 +72,11 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-100">
                                 @foreach ($lignes as $i => $ligne)
+                                    @php($ligne = array_merge($ligne, old("lignes.$i", [])))
                                     <tr>
                                         <td class="px-3 py-2">
                                             <input type="hidden" name="lignes[{{ $i }}][inclure]" value="0">
-                                            <input type="checkbox" name="lignes[{{ $i }}][inclure]" value="1" checked
+                                            <input type="checkbox" name="lignes[{{ $i }}][inclure]" value="1" @checked(($ligne['inclure'] ?? '1') === '1')
                                                 class="rounded border-gray-300 text-brand-sky focus:ring-brand-sky">
                                         </td>
                                         <td class="px-3 py-2">
@@ -72,8 +84,8 @@
                                                 placeholder="Obligatoire"
                                                 @class([
                                                     'w-32 rounded-md shadow-sm text-sm focus:border-brand-sky focus:ring-brand-sky',
-                                                    'border-brand-salmon text-brand-salmon-deep' => $ligne['matricule'] === '',
-                                                    'border-gray-300' => $ligne['matricule'] !== '',
+                                                    'border-brand-salmon text-brand-salmon-deep' => blank($ligne['matricule']),
+                                                    'border-gray-300' => filled($ligne['matricule']),
                                                 ])>
                                         </td>
                                         <td class="px-3 py-2">

@@ -57,7 +57,7 @@
         min-height: 0;
 
         padding: 2.2mm 1.5mm 0.6mm;
-        background: linear-gradient(180deg, #D2CF6B 0%, #D2CF6B 10%, #e5e0de 40%, #e5e0de 46%, #e3f4fc 54%, #e3f4fc 73%, #a9d9f2 79%, #1d8fd6 90%, #1d8fd6 100%);
+        background: linear-gradient(180deg, #FFD93D 0%, #FFD93D 10%, #e5e0de 40%, #e5e0de 46%, #e3f4fc 54%, #e3f4fc 73%, #a9d9f2 79%, #1d8fd6 90%, #1d8fd6 100%);
     }
 
     /* --- Recto : en-tête (logo, tutelle, drapeau) --- */
@@ -244,6 +244,12 @@
         overflow: hidden;
     }
 
+    .ecole-jean-baptiste .valeur-champ sup {
+        font-size: 0.65em;
+        line-height: 0;
+        vertical-align: super;
+    }
+
     .ecole-jean-baptiste .zone-photo {
         overflow: hidden;
     }
@@ -255,9 +261,10 @@
 
     .ecole-jean-baptiste .zone-photo .signature-eleve-img {
         flex-shrink: 0;
-        max-width: 18mm;
-        max-height: 7mm;
-        margin-top: 0.6mm;
+        max-width: 14mm;
+        max-height: 4.5mm;
+        object-fit: contain;
+        margin-top: 0.4mm;
         margin-bottom: 0;
     }
 
@@ -593,13 +600,13 @@
        dégradé continu bleu → beige → rose (pas de blocs diagonaux), nom de
        l'école en haut, tutelle (UCAO) en bas. Classes préfixées "ucao-",
        utilisées uniquement par cartes.partials.recto-contenu / verso-contenu
-       quand config('ecole.slug') vaut 'ucao' ou 'egei' — n'affecte aucune
+       quand config('ecole.slug') vaut 'ucao', 'egei', 'fsae', 'fde' ou leur copie « -2 » — n'affecte aucune
        autre carte. */
     :root {
         --ucao-bleu: #22aced;
         --ucao-bleu-texte: #1d4e89;
         --ucao-rouge: #d32f2f;
-        --ucao-rose: #D2CF6B;
+        --ucao-jaune : #FFFF00;
         --ucao-beige: #e5e0de;
     }
 
@@ -708,7 +715,7 @@
        en plus) : resserre l'espacement pour que la dernière ligne ne
        chevauche pas le trait séparateur du pied de page. */
     .ucao-champs--compact {
-        gap: 1mm;
+        gap: 0.3mm;
     }
 
     .ucao-champ {
@@ -750,8 +757,8 @@
     }
 
     .ucao-photo-cadre {
-        width: 16mm;
-        height: 15.5mm;
+        width: 14mm; /* format 4:5, comme le recadrage de la photo */
+        height: 17.5mm;
         border-radius: 0.6mm;
         overflow: hidden;
         background: #f2f2f2;
@@ -776,6 +783,8 @@
     }
 
     .ucao-signature-libelle {
+        position: relative;
+        top: 1.8mm;
         font-size: 1.5mm;
         font-weight: 700;
         color: var(--color-ink);
@@ -783,6 +792,8 @@
     }
 
     .ucao-signature-img {
+        position: relative;
+        top: 1mm;
         max-width: 16mm;
         max-height: 13mm;
         object-fit: contain;
@@ -812,12 +823,84 @@
     }
 
     .ucao-pied-ligne2 {
-        font-size: 1.6mm;
-        font-weight: 700;
+        font-size: 1.9mm;
+        font-weight: 800;
         letter-spacing: 0.2px;
         color: #ffffff;
         text-shadow: 0 0.15mm 0.3mm rgba(0, 0, 0, 0.55);
-        margin-top: 0.2mm;
+    }
+
+    /* Cartes UCAO, EGEI, FSAE et FDE : les deux lignes du nom de l'école en bas de
+       carte (ex. "ECOLE SUPERIEURE DE MANAGEMENT" + "ET D'ECONOMIE APPLIQUEE")
+       sur une seule ligne. */
+    .ecole-ucao .ucao-pied-ligne1,
+    .ecole-ucao-2 .ucao-pied-ligne1,
+    .ecole-ucao-3 .ucao-pied-ligne1,
+    .ecole-ucao .ucao-pied-ligne2,
+    .ecole-ucao-2 .ucao-pied-ligne2,
+    .ecole-ucao-3 .ucao-pied-ligne2,
+    .ecole-egei .ucao-pied-ligne1,
+    .ecole-egei-2 .ucao-pied-ligne1,
+    .ecole-egei-3 .ucao-pied-ligne1,
+    .ecole-egei .ucao-pied-ligne2,
+    .ecole-egei-2 .ucao-pied-ligne2,
+    .ecole-egei-3 .ucao-pied-ligne2,
+    .ecole-fsae .ucao-pied-ligne1,
+    .ecole-fsae-2 .ucao-pied-ligne1,
+    .ecole-fsae-3 .ucao-pied-ligne1,
+    .ecole-fsae .ucao-pied-ligne2,
+    .ecole-fsae-2 .ucao-pied-ligne2,
+    .ecole-fsae-3 .ucao-pied-ligne2,
+    .ecole-fde .ucao-pied-ligne1,
+    .ecole-fde-2 .ucao-pied-ligne1,
+    .ecole-fde-3 .ucao-pied-ligne1,
+    .ecole-fde .ucao-pied-ligne2,
+    .ecole-fde-2 .ucao-pied-ligne2,
+    .ecole-fde-3 .ucao-pied-ligne2 {
+        display: inline;
+        white-space: nowrap;
+    }
+
+    .ecole-ucao .ucao-pied-ligne1::after,
+    .ecole-ucao-2 .ucao-pied-ligne1::after,
+    .ecole-ucao-3 .ucao-pied-ligne1::after,
+    .ecole-egei .ucao-pied-ligne1::after,
+    .ecole-egei-2 .ucao-pied-ligne1::after,
+    .ecole-egei-3 .ucao-pied-ligne1::after,
+    .ecole-fsae .ucao-pied-ligne1::after,
+    .ecole-fsae-2 .ucao-pied-ligne1::after,
+    .ecole-fsae-3 .ucao-pied-ligne1::after,
+    .ecole-fde .ucao-pied-ligne1::after,
+    .ecole-fde-2 .ucao-pied-ligne1::after,
+    .ecole-fde-3 .ucao-pied-ligne1::after {
+        content: ' ';
+    }
+
+    /* Nom EGEI plus court : peut être écrit plus grand. */
+    .ecole-egei .ucao-pied-ligne1,
+    .ecole-egei-2 .ucao-pied-ligne1,
+    .ecole-egei-3 .ucao-pied-ligne1,
+    .ecole-egei .ucao-pied-ligne2,
+    .ecole-egei-2 .ucao-pied-ligne2,
+    .ecole-egei-3 .ucao-pied-ligne2,
+    .ecole-fde .ucao-pied-ligne1,
+    .ecole-fde-2 .ucao-pied-ligne1,
+    .ecole-fde-3 .ucao-pied-ligne1,
+    .ecole-fde .ucao-pied-ligne2,
+    .ecole-fde-2 .ucao-pied-ligne2,
+    .ecole-fde-3 .ucao-pied-ligne2 {
+        font-size: 2.3mm;
+    }
+
+    /* Nom FSAE un peu plus long que celui d'UCAO : légèrement réduit pour
+       tenir sur une seule ligne. */
+    .ecole-fsae .ucao-pied-ligne1,
+    .ecole-fsae-2 .ucao-pied-ligne1,
+    .ecole-fsae-3 .ucao-pied-ligne1,
+    .ecole-fsae .ucao-pied-ligne2,
+    .ecole-fsae-2 .ucao-pied-ligne2,
+    .ecole-fsae-3 .ucao-pied-ligne2 {
+        font-size: 1.8mm;
     }
 
     /* --- Verso UCAO : cartouche officiel sur papier blanc, texte centré --- */

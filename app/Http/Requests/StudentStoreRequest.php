@@ -28,7 +28,7 @@ class StudentStoreRequest extends FormRequest
             'prenoms' => ['required', 'string', 'max:150'],
             'date_naissance' => ['required', 'date', 'before:today'],
             'lieu_naissance' => ['required', 'string', 'max:150'],
-            'sexe' => ['required', 'in:M,F'],
+            'sexe' => ['nullable', 'in:M,F'],
             'classe' => ['required', 'string', Rule::in(config('ecole.classes'))],
             'telephone' => ['nullable', 'string', 'max:30'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],

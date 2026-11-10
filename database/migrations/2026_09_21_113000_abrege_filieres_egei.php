@@ -25,7 +25,7 @@ return new class extends Migration
         'Licence 1 - Maintenance Biomédicale et Équipements Hospitaliers' => 'Licence 1 (MBEH)',
         'Licence 1 - Système Informatique et Logiciel' => 'Licence 1 (SIL)',
         'Master 2 - Télécommunications et Réseaux Informatiques' => 'Master 2 (TRI)',
-        'Licence 1 - Agronomie' => 'Licence 1 (AGRO)',
+        'Licence 1 - Agronomie' => 'Licence 1 AGRO',
         'Licence 2 - Agronomie' => 'Licence 2 (AGRO)',
         'Licence 3 - Production et Gestion des Ressources Animales' => 'Licence 3 (PGRA)',
         "Licence 1 - Gestion de l'Environnement et Aménagement du Territoire" => 'Licence 1 (GEAT)',
@@ -67,7 +67,7 @@ return new class extends Migration
         DB::table('etablissements')
             ->where('slug', 'egei')
             ->update([
-                'classes' => json_encode($classes),
+                'classes' => json_encode ($classes),
                 'updated_at' => now(),
             ]);
 

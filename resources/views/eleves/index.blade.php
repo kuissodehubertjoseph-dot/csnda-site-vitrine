@@ -53,10 +53,12 @@
             eleveId: null,
             eleveNom: '',
             classeActuelle: '',
-            ouvrirDeplacement(id, nom, classe) {
+            classeActuelleAffichee: '',
+            ouvrirDeplacement(id, nom, classe, classeAffichee) {
                 this.eleveId = id;
                 this.eleveNom = nom;
                 this.classeActuelle = classe;
+                this.classeActuelleAffichee = classeAffichee;
                 this.deplacementOuvert = true;
             },
         }"
@@ -82,7 +84,7 @@
                     <select name="classe" class="rounded-md border-gray-300 shadow-sm focus:border-brand-sky focus:ring-brand-sky">
                         <option value="">Toutes les classes</option>
                         @foreach ($classes as $classe)
-                            <option value="{{ $classe }}" @selected($classeSelectionnee === $classe)>{{ $classe }}</option>
+                            <option value="{{ $classe }}" @selected($classeSelectionnee === $classe)>{{ \App\Support\Classe::texte($classe) }}</option>
                         @endforeach
                     </select>
 
@@ -120,7 +122,7 @@
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-brand-ink">
                                     <a href="{{ route('eleves.show', $eleve) }}" class="hover:underline font-medium">{{ $eleve->nom_complet }}</a>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ $eleve->classe }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ \App\Support\Classe::html($eleve->classe) }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ $eleve->age }} ans</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ $eleve->lieu_naissance ?: '—' }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm">
@@ -137,7 +139,7 @@
                                     <a href="{{ route('eleves.edit', $eleve) }}" class="text-brand-sky-deep hover:underline">Modifier</a>
                                     @can('deplacer-eleve')
                                         <button type="button"
-                                            @click="ouvrirDeplacement({{ $eleve->id }}, @js($eleve->nom_complet), @js($eleve->classe))"
+                                            @click="ouvrirDeplacement({{ $eleve->id }}, @js($eleve->nom_complet), @js($eleve->classe), @js(\App\Support\Classe::texte($eleve->classe)))"
                                             class="text-brand-green-deep hover:underline">
                                             Déplacer
                                         </button>
@@ -190,7 +192,7 @@
                     <h3 class="font-serif text-lg font-semibold text-brand-sky-deep">Déplacer l'élève</h3>
                     <p class="mt-1 text-sm text-gray-600">
                         <span class="font-medium text-brand-ink" x-text="eleveNom"></span>
-                        — actuellement en <span class="font-medium" x-text="classeActuelle"></span>.
+                        — actuellement en <span class="font-medium" x-text="classeActuelleAffichee"></span>.
                     </p>
 
                     <form method="POST" :action="`{{ url('eleves') }}/${eleveId}/classe`" class="mt-5 space-y-4">
@@ -203,7 +205,7 @@
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-sky focus:ring-brand-sky">
                                 @foreach ($classes as $classeOption)
                                     <option value="{{ $classeOption }}" x-bind:selected="classeActuelle === @js($classeOption)">
-                                        {{ $classeOption }}
+                                        {{ \App\Support\Classe::texte($classeOption) }}
                                     </option>
                                 @endforeach
                             </select>

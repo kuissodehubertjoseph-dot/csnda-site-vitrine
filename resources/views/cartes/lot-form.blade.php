@@ -21,7 +21,7 @@
                         <select name="classe" class="rounded-md border-gray-300 shadow-sm focus:border-brand-sky focus:ring-brand-sky" onchange="this.form.submit()">
                             <option value="">Toutes les classes (élèves actifs)</option>
                             @foreach ($classes as $classe)
-                                <option value="{{ $classe }}" @selected($classeSelectionnee === $classe)>{{ $classe }}</option>
+                                <option value="{{ $classe }}" @selected($classeSelectionnee === $classe)>{{ \App\Support\Classe::texte($classe) }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -40,7 +40,7 @@
                                 class="rounded border-gray-300 text-brand-sky focus:ring-brand-sky">
                             Tout sélectionner / désélectionner
                         </label>
-                        <span class="text-sm text-gray-500">{{ $eleves->count() }} élève(s) {{ $classeSelectionnee ? 'dans '.$classeSelectionnee : 'actif(s)' }}</span>
+                        <span class="text-sm text-gray-500">{{ $eleves->count() }} élève(s) @if ($classeSelectionnee) dans {{ \App\Support\Classe::html($classeSelectionnee) }} @else actif(s) @endif</span>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -62,7 +62,7 @@
                                     </td>
                                     <td class="px-4 py-2 text-sm font-mono">{{ $eleve->matricule }}</td>
                                     <td class="px-4 py-2 text-sm">{{ $eleve->nom_complet }}</td>
-                                    <td class="px-4 py-2 text-sm text-gray-600">{{ $eleve->classe }}</td>
+                                    <td class="px-4 py-2 text-sm text-gray-600">{{ \App\Support\Classe::html($eleve->classe) }}</td>
                                 </tr>
                             @empty
                                 <tr>

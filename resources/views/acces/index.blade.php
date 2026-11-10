@@ -1,5 +1,3 @@
-@use('Illuminate\Support\Facades\Gate')
-
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-serif text-2xl text-brand-sky-deep font-semibold">
@@ -26,16 +24,7 @@
             <div class="bg-white shadow-sm rounded-lg p-6">
                 <h3 class="font-serif text-lg text-brand-sky-deep font-semibold mb-4">Droits par rôle</h3>
 
-                <div class="grid gap-4 sm:grid-cols-3">
-                    <div class="border border-gray-100 rounded-lg p-4">
-                        <div class="font-semibold text-brand-ink">Développeur</div>
-                        <p class="text-xs text-gray-500 mt-1">Accès technique complet</p>
-                        <ul class="mt-3 space-y-1 text-sm text-gray-600 list-disc list-inside">
-                            <li>Tout ce que fait le directeur général</li>
-                            <li>Seul à pouvoir créer, modifier ou supprimer un compte développeur</li>
-                        </ul>
-                    </div>
-
+                <div class="grid gap-4 sm:grid-cols-2">
                     <div class="border border-gray-100 rounded-lg p-4">
                         <div class="font-semibold text-brand-ink">Directeur général</div>
                         <p class="text-xs text-gray-500 mt-1">Accès complet à l'établissement</p>
@@ -144,31 +133,23 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">{{ $utilisateur->email }}</td>
-                                    @php($modifiable = ! $utilisateur->estDeveloppeur() || Gate::allows('gerer-comptes-developpeur'))
                                     <td class="px-4 py-3 text-sm">
-                                        @if ($modifiable)
-                                            <form method="POST" action="{{ route('acces.update', $utilisateur) }}" class="inline-flex items-center gap-2">
-                                                @csrf
-                                                @method('PATCH')
-                                                <select name="role" onchange="this.form.submit()"
-                                                    class="rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-sky focus:ring-brand-sky">
-                                                    @foreach ($roles as $cle => $libelle)
-                                                        <option value="{{ $cle }}" @selected($utilisateur->role === $cle)>{{ $libelle }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <noscript>
-                                                    <button type="submit" class="text-xs text-brand-sky-deep hover:underline">Appliquer</button>
-                                                </noscript>
-                                            </form>
-                                        @else
-                                            <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-sky/10 px-2.5 py-1 text-xs font-medium text-brand-sky-deep">
-                                                {{ $utilisateur->libelleRole() }}
-                                                <span class="text-gray-400" title="Modifiable uniquement par un développeur">🔒</span>
-                                            </span>
-                                        @endif
+                                        <form method="POST" action="{{ route('acces.update', $utilisateur) }}" class="inline-flex items-center gap-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <select name="role" onchange="this.form.submit()"
+                                                class="rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-sky focus:ring-brand-sky">
+                                                @foreach ($roles as $cle => $libelle)
+                                                    <option value="{{ $cle }}" @selected($utilisateur->role === $cle)>{{ $libelle }}</option>
+                                                @endforeach
+                                            </select>
+                                            <noscript>
+                                                <button type="submit" class="text-xs text-brand-sky-deep hover:underline">Appliquer</button>
+                                            </noscript>
+                                        </form>
                                     </td>
                                     <td class="px-4 py-3 text-right text-sm">
-                                        @if ($utilisateur->is(auth()->user()) || ! $modifiable)
+                                        @if ($utilisateur->is(auth()->user()))
                                             <span class="text-xs text-gray-400">—</span>
                                         @else
                                             <form method="POST" action="{{ route('acces.destroy', $utilisateur) }}" class="inline"
