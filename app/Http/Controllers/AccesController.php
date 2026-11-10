@@ -28,7 +28,7 @@ class AccesController extends Controller
                 ->where('role', '!=', User::ROLE_DEVELOPPEUR)
                 ->orderBy('name')
                 ->get(),
-            'roles' => array_diff_key(User::ROLES, [User::ROLE_DEVELOPPEUR => true]),
+            'roles' => array_diff_key(User::ROLES, [User::ROLE_DEVELOPPEUR => true, User::ROLE_ASSISTANT => true]),
         ]);
     }
 

@@ -273,4 +273,22 @@ class RolesTest extends TestCase
 
         $this->assertDatabaseHas('users', ['id' => $this->dg->id]);
     }
+
+    public function test_l_assistant_accede_a_toutes_les_ecoles_sans_pouvoir_supprimer(): void
+    {
+        $assistant = User::factory()->create(['role' => User::ROLE_ASSISTANT, 'etablissement_id' => null]);
+
+        $autre = Etablissement::where('id', '!=', $this->etablissement->id)->first()
+            ?? Etablissement::create(['slug' => 'autre', 'nom' => 'Autre', 'statut' => 'actif']);
+
+        $this->assertTrue($assistant->peutAccederA($this->etablissement));
+        $this->assertTrue($assistant->peutAccederA($autre));
+
+        $this->agir($assistant)->get('/eleves')->assertOk();
+        $this->agir($assistant)->delete("/eleves/{$this->eleve->id}")->assertForbidden();
+        $this->agir($assistant)->delete('/eleves-tout')->assertForbidden();
+        $this->agir($assistant)->get('/acces')->assertForbidden();
+
+        $this->assertDatabaseHas('students', ['id' => $this->eleve->id]);
+    }
 }

@@ -33,6 +33,14 @@ class User extends Authenticatable
     public const ROLE_SECRETAIRE = 'secretaire';
 
     /**
+     * Assistant multi-établissements : mêmes droits que le secrétariat (saisie,
+     * modification, import, impression) mais sur tous les établissements, sans
+     * droit de suppression ni gestion des accès. Compte global (sans
+     * établissement de rattachement), créé uniquement en ligne de commande.
+     */
+    public const ROLE_ASSISTANT = 'assistant';
+
+    /**
      * Libellés affichés dans l'interface, du plus privilégié au moins privilégié.
      *
      * @var array<string, string>
@@ -41,6 +49,7 @@ class User extends Authenticatable
         self::ROLE_DEVELOPPEUR => 'Développeur',
         self::ROLE_DG => 'Directeur général',
         self::ROLE_SECRETAIRE => 'Secrétaire',
+        self::ROLE_ASSISTANT => 'Assistant (toutes les écoles)',
     ];
 
     /**
@@ -84,6 +93,11 @@ class User extends Authenticatable
         return $this->role === self::ROLE_DEVELOPPEUR;
     }
 
+    public function estAssistant(): bool
+    {
+        return $this->role === self::ROLE_ASSISTANT;
+    }
+
     public function estDg(): bool
     {
         return $this->role === self::ROLE_DG;
@@ -117,11 +131,11 @@ class User extends Authenticatable
 
     /**
      * Un utilisateur a-t-il le droit de se connecter à cet établissement ?
-     * Un développeur peut se connecter à n'importe lequel ; les autres rôles
+     * Un développeur ou un assistant peut se connecter à n'importe lequel ; les autres rôles
      * sont rattachés à un établissement précis.
      */
     public function peutAccederA(Etablissement $etablissement): bool
     {
-        return $this->estDeveloppeur() || $this->etablissement_id === $etablissement->id;
+        return $this->estDeveloppeur() || $this->estAssistant() || $this->etablissement_id === $etablissement->id;
     }
 }

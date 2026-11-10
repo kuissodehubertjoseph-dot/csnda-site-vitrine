@@ -17,13 +17,15 @@ class MultiEtablissementTest extends TestCase
         foreach (['ucao', 'fde', 'egei', 'fsae'] as $slug) {
             $version2 = Etablissement::where('slug', $slug.'-2')->firstOrFail();
             $version3 = Etablissement::where('slug', $slug.'-3')->firstOrFail();
-            $attributsIgnores = array_flip(['id', 'slug', 'nom', 'created_at', 'updated_at']);
+            $attributsIgnores = array_flip(['id', 'slug', 'nom', 'classes', 'created_at', 'updated_at']);
 
             $this->assertSame(substr($version2->nom, 0, -1).'3', $version3->nom);
             $this->assertSame(
                 array_diff_key($version2->getAttributes(), $attributsIgnores),
                 array_diff_key($version3->getAttributes(), $attributsIgnores)
             );
+            // Les classes de la version 3 peuvent s'enrichir (Masters ajoutés), jamais s'appauvrir.
+            $this->assertEmpty(array_diff($version2->classes, $version3->classes));
             $this->assertSame(0, Student::where('etablissement_id', $version3->id)->count());
         }
     }
