@@ -12,6 +12,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Derrière le proxy HTTPS de l'hébergeur : fait confiance à X-Forwarded-*.
+        $middleware->trustProxies(at: '*');
         $middleware->web(append: [ChargerEtablissementActif::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
