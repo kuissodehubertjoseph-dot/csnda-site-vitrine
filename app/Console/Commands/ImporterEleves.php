@@ -4,32 +4,35 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use ZipArchive;
 
 /**
- * Importe des élèves depuis un fichier JSON produit par eleves:exporter.
- * Chaque élève est rattaché à son établissement par le slug et identifié par
- * (établissement, matricule) : relancer la commande met à jour sans doublon.
+ * Importe l'archive produite par eleves:exporter : élèves rattachés à leur
+ * établissement par le slug, identifiés par (établissement, matricule), avec
+ * leurs photos et signatures. Relancer la commande met à jour sans doublon.
  */
 class ImporterEleves extends Command
 {
-    protected $signature = 'eleves:importer {fichier : Chemin du fichier JSON} {--dry-run : Simule sans rien écrire}';
+    protected $signature = 'eleves:importer {fichier : Archive ZIP produite par eleves:exporter} {--dry-run : Simule sans rien écrire}';
 
-    protected $description = 'Importe des élèves (export JSON) dans leurs établissements';
+    protected $description = 'Importe des élèves (archive ZIP) avec leurs photos et signatures';
 
     public function handle(): int
     {
         $fichier = $this->argument('fichier');
+        $zip = new ZipArchive;
 
-        if (! is_file($fichier)) {
-            $this->error("Fichier introuvable : {$fichier}");
+        if (! is_file($fichier) || $zip->open($fichier) !== true) {
+            $this->error("Archive introuvable ou invalide : {$fichier}");
 
             return self::FAILURE;
         }
 
-        $eleves = json_decode(file_get_contents($fichier), true);
+        $eleves = json_decode((string) $zip->getFromName('eleves.json'), true);
 
         if (! is_array($eleves)) {
-            $this->error('Le fichier JSON est invalide.');
+            $this->error("L'archive ne contient pas de eleves.json valide.");
 
             return self::FAILURE;
         }
@@ -45,8 +48,10 @@ class ImporterEleves extends Command
 
         $crees = 0;
         $maj = 0;
+        $dry = $this->option('dry-run');
+        $disque = Storage::disk('public');
 
-        DB::transaction(function () use ($eleves, $etablissements, &$crees, &$maj) {
+        DB::transaction(function () use ($eleves, $etablissements, $zip, $disque, $dry, &$crees, &$maj) {
             foreach ($eleves as $e) {
                 $cle = ['etablissement_id' => $etablissements[$e['etablissement']], 'matricule' => $e['matricule']];
                 $existe = DB::table('students')->where($cle)->exists();
@@ -56,22 +61,38 @@ class ImporterEleves extends Command
                     'prenoms' => $e['prenoms'],
                     'date_naissance' => $e['date_naissance'],
                     'lieu_naissance' => $e['lieu_naissance'],
+                    'sexe' => $e['sexe'] ?? null,
                     'classe' => $e['classe'],
                     'telephone' => $e['telephone'],
+                    'photo' => $e['photo'] ?? null,
+                    'signature' => $e['signature'] ?? null,
                     'annee_scolaire' => $e['annee_scolaire'],
                     'statut' => $e['statut'] ?? 'actif',
                     'updated_at' => now(),
                 ] + ($existe ? [] : ['created_at' => now()]));
 
                 $existe ? $maj++ : $crees++;
+
+                if ($dry) {
+                    continue;
+                }
+
+                foreach (['photo', 'signature'] as $champ) {
+                    $chemin = $e[$champ] ?? null;
+                    $contenu = $chemin ? $zip->getFromName('fichiers/'.$chemin) : false;
+
+                    if ($contenu !== false) {
+                        $disque->put($chemin, $contenu);
+                    }
+                }
             }
 
-            if ($this->option('dry-run')) {
+            if ($dry) {
                 DB::rollBack();
             }
         });
 
-        $this->info(($this->option('dry-run') ? '[simulation] ' : '')."{$crees} créés, {$maj} mis à jour.");
+        $this->info(($dry ? '[simulation] ' : '')."{$crees} créés, {$maj} mis à jour.");
 
         return self::SUCCESS;
     }
